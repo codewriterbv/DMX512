@@ -1,0 +1,23 @@
+project:
+  name: app
+  version: 1.0.0-SNAPSHOT
+  description: DMX512 Java Library
+  longDescription: Java library to interact with DMX512 devices
+  authors:
+    - CodeWriter bv
+    - Frank Delporte
+  license: GPL-2.0-license
+  java:
+    groupId: be.codewriter
+    version: 21
+  extraProperties:
+    inceptionYear: 2025
+
+release:
+  github:
+    owner: codewriterbv
+
+distributions:
+  app:
+    artifacts:
+      - path: path/to/{{distributionName}}-{{projectVersion}}.zip
