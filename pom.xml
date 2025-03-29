@@ -18,6 +18,9 @@
 
         <!-- Dependencies -->
 
+        <!-- Test dependencies -->
+        <junit.version>5.10.2</junit.version>
+
         <!-- Plugins -->
         <jreleaser.version>1.13.1</jreleaser.version>
         <jsonassert.version>1.5.0</jsonassert.version>
