@@ -4,11 +4,8 @@ import be.codewriter.dmx512.controller.DMXController;
 import be.codewriter.dmx512.controller.DMXIPController;
 import be.codewriter.dmx512.controller.DMXSerialController;
 import be.codewriter.dmx512.fixture.RGBFixture;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 public class Main {
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class.getName());
@@ -54,7 +51,7 @@ public class Main {
                     Thread.sleep(50);
                 }
 
-            } catch (IOException | InterruptedException e) {
+            } catch (Exception e) {
                 LOGGER.error("Error sending DMX data: {}", e.getMessage());
             } finally {
                 // Always close the connection
