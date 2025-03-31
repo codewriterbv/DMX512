@@ -11,7 +11,8 @@ import java.util.Arrays;
 import java.util.List;
  
 /**
- * DMXController - Controls DMX lights over USB-to-DMX interface using jSerialComm
+ * DMX Serial Controller.
+ * Controls DMX lights over USB-to-DMX interface using jSerialComm.
  */
 public class DMXSerialController implements DMXController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXSerialController.class.getName());

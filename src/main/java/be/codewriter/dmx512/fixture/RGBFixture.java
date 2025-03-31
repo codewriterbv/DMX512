@@ -2,6 +2,8 @@ package be.codewriter.dmx512.fixture;
 
 import be.codewriter.dmx512.controller.DMXController;
 
+import java.awt.*;
+
 /**
  * Represents an RGB DMX light fixture
  */
@@ -43,6 +45,43 @@ public class RGBFixture extends BaseFixture {
         int green = (rgb >> 8) & 0xFF;
         int blue = rgb & 0xFF;
         setColor(red, green, blue);
+    }
+
+    /**
+     * Set the RGB color using a {@link Color}
+     *
+     * @param color {@link Color}
+     */
+    public void setColor(Color color) {
+        setColor(color.getRed(), color.getGreen(), color.getBlue());
+    }
+
+    /**
+     * Get the last set Red color value.
+     */
+    public int getRed() {
+        return getValue(RED_OFFSET);
+    }
+
+    /**
+     * Get the last set Green color value.
+     */
+    public int getGreen() {
+        return getValue(GREEN_OFFSET);
+    }
+
+    /**
+     * Get the last set Blue color value.
+     */
+    public int getBlue() {
+        return getValue(BLUE_OFFSET);
+    }
+
+    /**
+     * Get the last set color.
+     */
+    public Color getColor() {
+        return new Color(getRed(), getGreen(), getBlue());
     }
 }
 

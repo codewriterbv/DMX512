@@ -12,6 +12,10 @@ import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.util.*;
 
+/**
+ * DMX IP Controller.
+ * Controls DMX lights over IP-to-DMX interface.
+ */
 public class DMXIPController implements DMXController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXIPController.class.getName());
 

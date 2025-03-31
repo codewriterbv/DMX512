@@ -65,6 +65,5 @@ public class Main {
     private static void demoIp() {
         DMXController controller = new DMXIPController();
         controller.connect("192.168.1.100");  // IP address of your Art-Net node
-
     }
 }
