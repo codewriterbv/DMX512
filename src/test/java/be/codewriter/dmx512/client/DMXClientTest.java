@@ -7,8 +7,8 @@ import be.codewriter.dmx512.ofl.model.Mode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,6 +19,13 @@ class DMXClientTest {
 
     @BeforeAll
     static void setUp() {
+        LinkedHashMap<String, Channel> channels = new LinkedHashMap<>();
+        channels.put("Red", new Channel(null, null, null, null));
+        channels.put("Green", new Channel(null, null, null, null));
+        channels.put("Blue", new Channel(null, null, null, null));
+        channels.put("Dimmer", new Channel(null, null, null, null));
+        channels.put("Effects", new Channel(null, null, null, null));
+
         var fixture = new Fixture(
                 "Name",
                 List.of("Cat 1", "Cate 2"),
@@ -26,13 +33,7 @@ class DMXClientTest {
                 null, // links
                 null, // physical
                 null, // wheels
-                Map.of(
-                        "Red", new Channel(null, null, null, null),
-                        "Green", new Channel(null, null, null, null),
-                        "Blue", new Channel(null, null, null, null),
-                        "Dimmer", new Channel(null, null, null, null),
-                        "Effects", new Channel(null, null, null, null)
-                ),
+                channels,
                 List.of(new Mode(
                         "5-Channel",
                         "5ch",

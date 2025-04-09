@@ -2,9 +2,8 @@ package be.codewriter.dmx512.ofl.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 // Root fixture record
 public record Fixture(
@@ -14,16 +13,26 @@ public record Fixture(
         Links links,
         Physical physical,
         @JsonProperty("wheels")
-        Map<String, Wheel> wheels,
+        LinkedHashMap<String, Wheel> wheels,
         @JsonProperty("availableChannels")
-        Map<String, Channel> availableChannels,
+        LinkedHashMap<String, Channel> availableChannels,
         List<Mode> modes
 ) {
     public int getChannelIndex(String key) {
-        return new ArrayList<>(availableChannels.keySet())
-                .stream()
-                .map(String::toUpperCase)
-                .toList()
-                .indexOf(key.toUpperCase());
+        var counter = 0;
+        for (var entry : availableChannels.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(key)) {
+                return counter;
+            }
+            counter++;
+        }
+        return -1;
+    }
+
+    public Mode getMode(String name) {
+        return modes.stream()
+                .filter(mode -> mode.name().equalsIgnoreCase(name))
+                .findFirst()
+                .orElse(null);
     }
 }
