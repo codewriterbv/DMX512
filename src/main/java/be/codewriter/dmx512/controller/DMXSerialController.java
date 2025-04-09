@@ -1,5 +1,6 @@
 package be.codewriter.dmx512.controller;
 
+import be.codewriter.dmx512.serial.SerialConnection;
 import com.fazecast.jSerialComm.SerialPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +9,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
  
 /**
@@ -194,18 +196,21 @@ public class DMXSerialController implements DMXController {
     }
 
     /**
-     * List all available serial ports
-     *
-     * @return Array of available port names
+     * Get all the available serial connections
      */
-    public String[] listAvailablePorts() {
+    public List<SerialConnection> getAvailablePorts() {
         SerialPort[] ports = SerialPort.getCommPorts();
-        List<String> portNames = new ArrayList<>();
-
-        for (SerialPort port : ports) {
-            portNames.add(port.getSystemPortName() + " - " + port.getDescriptivePortName());
-        }
-
-        return portNames.toArray(new String[0]);
+        return Arrays.stream(ports)
+                .map(p -> new SerialConnection(
+                        p.getSystemPortName(),
+                        p.getSystemPortPath(),
+                        p.getDescriptivePortName(),
+                        p.getManufacturer(),
+                        p.getSerialNumber(),
+                        p.getPortDescription(),
+                        p.getPortLocation()
+                        ))
+                .sorted(Comparator.comparing(SerialConnection::name))
+                .toList();
     }
 }

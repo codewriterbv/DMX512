@@ -20,7 +20,7 @@ public class Main {
 
         // List available ports
         LOGGER.info("Available ports:");
-        for (String port : controller.listAvailablePorts()) {
+        for (var port : controller.getAvailablePorts()) {
             LOGGER.info("\t{}", port);
         }
 
