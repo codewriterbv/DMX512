@@ -1,5 +1,7 @@
 package be.codewriter.dmx512.controller;
 
+import be.codewriter.dmx512.client.DMXClient;
+import be.codewriter.dmx512.helper.DMXMessage;
 import be.codewriter.dmx512.network.Device;
 import be.codewriter.dmx512.network.Protocol;
 import org.slf4j.Logger;
@@ -25,7 +27,6 @@ public class DMXIPController implements DMXController {
     private static final long MIN_PACKET_INTERVAL = 25; // 40fps max
     private static final int RATE_LIMIT_WINDOW = 1000; // 1 second
     private static final int MAX_PACKETS_PER_SECOND = 44; // Art-Net recommended
-    private final byte[] dmxData;
     // Rate limiting
     private final Queue<Long> packetTimes = new LinkedList<>();
     private final boolean listening = true;
@@ -42,11 +43,6 @@ public class DMXIPController implements DMXController {
     private double bandwidth = 0;
     private String lastError = "";
     private Thread listenerThread;
-
-    public DMXIPController() {
-        dmxData = new byte[DMX_UNIVERSE_SIZE];
-        Arrays.fill(dmxData, (byte) 0);
-    }
 
     public void setUniverse(int universe) {
         if (universe < 0 || universe > 32767) {
@@ -212,27 +208,7 @@ public class DMXIPController implements DMXController {
     }
 
     @Override
-    public void setChannel(int channel, int value) {
-        if (channel < 1 || channel > DMX_UNIVERSE_SIZE) {
-            throw new IllegalArgumentException("Channel must be between 1 and " + DMX_UNIVERSE_SIZE);
-        }
-        dmxData[channel - 1] = (byte) value;
-    }
-
-    @Override
-    public void setChannels(int startChannel, int[] values) {
-        if (startChannel < 1 || startChannel > DMX_UNIVERSE_SIZE) {
-            throw new IllegalArgumentException("Start channel must be between 1 and " + DMX_UNIVERSE_SIZE);
-        }
-        for (int i = 0; i < values.length; i++) {
-            if (startChannel + i <= DMX_UNIVERSE_SIZE) {
-                dmxData[startChannel + i - 1] = (byte) values[i];
-            }
-        }
-    }
-
-    @Override
-    public void render() {
+    public void render(List<DMXClient> clients) {
         if (!connected || socket == null) {
             LOGGER.error("Not connected to DMX network");
         }
@@ -257,6 +233,7 @@ public class DMXIPController implements DMXController {
         }
 
         // Create and send packet based on protocol
+        byte[] dmxData = DMXMessage.build(clients);
         byte[] packet;
         if (protocol == Protocol.ARTNET) {
             packet = createArtNetPacket(dmxData);
@@ -290,14 +267,6 @@ public class DMXIPController implements DMXController {
             socket.close();
         }
         connected = false;
-    }
-
-    @Override
-    public int getChannel(int channel) {
-        if (channel < 1 || channel > DMX_UNIVERSE_SIZE) {
-            throw new IllegalArgumentException("Channel must be between 1 and " + DMX_UNIVERSE_SIZE);
-        }
-        return dmxData[channel - 1] & 0xFF;
     }
 
     @Override

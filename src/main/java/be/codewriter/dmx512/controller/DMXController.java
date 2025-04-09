@@ -1,17 +1,15 @@
 package be.codewriter.dmx512.controller;
 
+import be.codewriter.dmx512.client.DMXClient;
+
+import java.util.List;
+
 public interface DMXController {
     boolean connect(String address);
 
-    void setChannel(int channel, int value);
-
-    void setChannels(int startChannel, int[] values);
-
-    void render();
+    void render(List<DMXClient> clients);
 
     void close();
-
-    int getChannel(int channel);
 
     boolean isConnected();
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -17,10 +17,12 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
 
         <!-- Dependencies -->
+        <jackson.version>2.15.2</jackson.version>
         <jserialcomm.version>2.11.0</jserialcomm.version>
         <slf4j.version>2.0.17</slf4j.version>
 
         <!-- Test dependencies -->
+        <assertj.version>3.27.3</assertj.version>
         <junit.version>5.10.2</junit.version>
 
         <!-- Plugins -->
@@ -48,6 +50,13 @@
             <version>${jserialcomm.version}</version>
         </dependency>
 
+        <!-- JSON parsing -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
         <!-- Tests -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -56,11 +65,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.skyscreamer</groupId>
-            <artifactId>jsonassert</artifactId>
-            <version>${jsonassert.version}</version>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <distributionManagement>

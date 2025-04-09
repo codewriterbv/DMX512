@@ -1,5 +1,7 @@
 package be.codewriter.dmx512.controller;
 
+import be.codewriter.dmx512.client.DMXClient;
+import be.codewriter.dmx512.helper.DMXMessage;
 import be.codewriter.dmx512.serial.SerialConnection;
 import com.fazecast.jSerialComm.SerialPort;
 import org.slf4j.Logger;
@@ -19,17 +21,9 @@ public class DMXSerialController implements DMXController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXSerialController.class.getName());
 
     private static final int DMX_UNIVERSE_SIZE = 512;
-    private final byte[] dmxData;
     private SerialPort serialPort;
     private OutputStream outputStream;
     private boolean connected = false;
-
-    public DMXSerialController() {
-        dmxData = new byte[DMX_UNIVERSE_SIZE + 1]; // +1 for start code
-        dmxData[0] = 0; // DMX start code
-        // Initialize all channels to 0
-        Arrays.fill(dmxData, 1, DMX_UNIVERSE_SIZE + 1, (byte) 0);
-    }
 
     /**
      * Connect to the USB-DMX interface
@@ -79,50 +73,10 @@ public class DMXSerialController implements DMXController {
     }
 
     /**
-     * Set a DMX channel to a specific value
-     *
-     * @param channel DMX channel (1-512)
-     * @param value   Value (0-255)
-     */
-    public void setChannel(int channel, int value) {
-        if (channel < 1 || channel > DMX_UNIVERSE_SIZE) {
-            throw new IllegalArgumentException("Channel must be between 1 and " + DMX_UNIVERSE_SIZE);
-        }
-
-        if (value < 0 || value > 255) {
-            throw new IllegalArgumentException("Value must be between 0 and 255");
-        }
-
-        dmxData[channel] = (byte) value;
-    }
-
-    /**
-     * Set multiple DMX channels at once
-     *
-     * @param startChannel First channel to set
-     * @param values       Array of values to set
-     */
-    public void setChannels(int startChannel, int[] values) {
-        if (startChannel < 1 || startChannel > DMX_UNIVERSE_SIZE) {
-            throw new IllegalArgumentException("Start channel must be between 1 and " + DMX_UNIVERSE_SIZE);
-        }
-
-        if (startChannel + values.length - 1 > DMX_UNIVERSE_SIZE) {
-            throw new IllegalArgumentException("Channel range exceeds DMX universe size");
-        }
-
-        for (int i = 0; i < values.length; i++) {
-            if (values[i] < 0 || values[i] > 255) {
-                throw new IllegalArgumentException("Value must be between 0 and 255");
-            }
-            dmxData[startChannel + i] = (byte) values[i];
-        }
-    }
-
-    /**
      * Send the current DMX universe data to the interface
      */
-    public void render() {
+    @Override
+    public void render(List<DMXClient> clients) {
         if (!connected || outputStream == null) {
             throw new IllegalStateException("Not connected to DMX interface");
         }
@@ -144,6 +98,7 @@ public class DMXSerialController implements DMXController {
 
         // Send DMX data
         try {
+            byte[] dmxData = DMXMessage.build(clients);
             outputStream.write(dmxData);
             outputStream.flush();
         } catch (Exception e) {
@@ -169,20 +124,6 @@ public class DMXSerialController implements DMXController {
                 connected = false;
             }
         }
-    }
-
-    /**
-     * Get the value of a DMX channel
-     *
-     * @param channel DMX channel (1-512)
-     * @return The current value (0-255)
-     */
-    public int getChannel(int channel) {
-        if (channel < 1 || channel > DMX_UNIVERSE_SIZE) {
-            throw new IllegalArgumentException("Channel must be between 1 and " + DMX_UNIVERSE_SIZE);
-        }
-
-        return dmxData[channel] & 0xFF; // Convert to unsigned byte
     }
 
     /**
