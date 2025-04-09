@@ -7,11 +7,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
- 
+
 /**
  * DMX Serial Controller.
  * Controls DMX lights over USB-to-DMX interface using jSerialComm.
@@ -202,14 +201,9 @@ public class DMXSerialController implements DMXController {
         SerialPort[] ports = SerialPort.getCommPorts();
         return Arrays.stream(ports)
                 .map(p -> new SerialConnection(
-                        p.getSystemPortName(),
                         p.getSystemPortPath(),
-                        p.getDescriptivePortName(),
-                        p.getManufacturer(),
-                        p.getSerialNumber(),
-                        p.getPortDescription(),
-                        p.getPortLocation()
-                        ))
+                        p.getSystemPortName(),
+                        p.getDescriptivePortName()))
                 .sorted(Comparator.comparing(SerialConnection::name))
                 .toList();
     }

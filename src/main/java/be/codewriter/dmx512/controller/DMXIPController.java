@@ -28,6 +28,7 @@ public class DMXIPController implements DMXController {
     private final byte[] dmxData;
     // Rate limiting
     private final Queue<Long> packetTimes = new LinkedList<>();
+    private final boolean listening = true;
     private DatagramSocket socket;
     private InetAddress address;
     private int port;
@@ -40,6 +41,7 @@ public class DMXIPController implements DMXController {
     private long lastPacketTime = 0;
     private double bandwidth = 0;
     private String lastError = "";
+    private Thread listenerThread;
 
     public DMXIPController() {
         dmxData = new byte[DMX_UNIVERSE_SIZE];
@@ -201,6 +203,7 @@ public class DMXIPController implements DMXController {
             this.port = DEFAULT_ARTNET_PORT;
             this.socket = new DatagramSocket();
             this.connected = true;
+            startListening();
             return true;
         } catch (IOException e) {
             this.connected = false;
@@ -300,6 +303,40 @@ public class DMXIPController implements DMXController {
     @Override
     public boolean isConnected() {
         return connected;
+    }
+
+    private void startListening() {
+        listenerThread = new Thread(() -> {
+            byte[] receiveBuffer = new byte[1024]; // Adjust buffer size as needed
+            DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+
+            while (listening) {
+                try {
+                    socket.receive(receivePacket); // This blocks until a packet is received
+
+                    // Log the received data
+                    LOGGER.debug("Received packet from {}:{}, length: {}",
+                            receivePacket.getAddress(),
+                            receivePacket.getPort(),
+                            receivePacket.getLength());
+
+                    // If you need to log the actual data:
+                    byte[] data = Arrays.copyOf(receivePacket.getData(), receivePacket.getLength());
+                    LOGGER.trace("Received data: {}", Arrays.toString(data));
+
+                } catch (SocketTimeoutException e) {
+                    // Timeout is normal, continue listening
+                    continue;
+                } catch (IOException e) {
+                    if (listening) { // Only log if we're still supposed to be listening
+                        LOGGER.error("Error receiving packet: {}", e.getMessage());
+                    }
+                    break;
+                }
+            }
+        });
+        listenerThread.setName("DMX-UDP-Listener");
+        listenerThread.start();
     }
 
     private byte[] createArtNetPacket(byte[] dmxData) {
