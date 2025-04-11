@@ -78,16 +78,20 @@ public class DMXSerialController implements DMXController {
     @Override
     public void render(List<DMXClient> clients) {
         if (!connected || outputStream == null) {
-            throw new IllegalStateException("Not connected to DMX interface");
+            LOGGER.error("Not connected to DMX interface, can't render data to the devices");
+            return;
         }
 
         // Send DMX break
         serialPort.setBreak();
+
         try {
             Thread.sleep(1); // Break duration (1ms)
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+
+        // Clear DMX break
         serialPort.clearBreak();
 
         try {

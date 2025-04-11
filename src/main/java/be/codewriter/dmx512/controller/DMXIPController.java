@@ -210,7 +210,8 @@ public class DMXIPController implements DMXController {
     @Override
     public void render(List<DMXClient> clients) {
         if (!connected || socket == null) {
-            LOGGER.error("Not connected to DMX network");
+            LOGGER.error("Not connected to DMX network, can't render data to the devices");
+            return;
         }
 
         // Check rate limiting
