@@ -2,7 +2,7 @@ package be.codewriter.dmx512.controller;
 
 import be.codewriter.dmx512.client.DMXClient;
 import be.codewriter.dmx512.helper.DMXMessage;
-import be.codewriter.dmx512.network.Device;
+import be.codewriter.dmx512.network.DMXIpDevice;
 import be.codewriter.dmx512.network.Protocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +21,6 @@ import java.util.*;
 public class DMXIPController implements DMXController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXIPController.class.getName());
 
-    private static final int DMX_UNIVERSE_SIZE = 512;
     private static final int DEFAULT_ARTNET_PORT = 6454;
     private static final int DEFAULT_SACN_PORT = 5568;
     private static final long MIN_PACKET_INTERVAL = 25; // 40fps max
@@ -51,8 +50,8 @@ public class DMXIPController implements DMXController {
         this.universe = universe;
     }
 
-    public List<Device> discoverDevices() {
-        List<Device> devices = new ArrayList<>();
+    public List<DMXIpDevice> discoverDevices() {
+        List<DMXIpDevice> DMXIpDevices = new ArrayList<>();
 
         try {
             // Send Art-Net poll packet
@@ -78,9 +77,9 @@ public class DMXIPController implements DMXController {
                         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                         discoverySocket.receive(receivePacket);
 
-                        Device device = parseArtNetPollReply(receivePacket);
-                        if (device != null) {
-                            devices.add(device);
+                        DMXIpDevice DMXIpDevice = parseArtNetPollReply(receivePacket);
+                        if (DMXIpDevice != null) {
+                            DMXIpDevices.add(DMXIpDevice);
                         }
                     } catch (SocketTimeoutException e) {
                         break;
@@ -91,7 +90,7 @@ public class DMXIPController implements DMXController {
             lastError = "Discovery failed: " + e.getMessage();
         }
 
-        return devices;
+        return DMXIpDevices;
     }
 
     public void setProtocol(Protocol protocol) {
@@ -165,7 +164,7 @@ public class DMXIPController implements DMXController {
         return packet;
     }
 
-    private Device parseArtNetPollReply(DatagramPacket packet) {
+    private DMXIpDevice parseArtNetPollReply(DatagramPacket packet) {
         byte[] data = packet.getData();
 
         // Verify Art-Net header
@@ -180,7 +179,7 @@ public class DMXIPController implements DMXController {
         String name = new String(data, 26, 18).trim(); // Short name
         int universeCount = data[173] & 0xFF; // Number of ports
 
-        return new Device(ipAddress, Protocol.ARTNET, name, universeCount);
+        return new DMXIpDevice(ipAddress, Protocol.ARTNET, name, universeCount);
     }
 
     private double calculateBandwidth(int packetSize) {
@@ -292,8 +291,9 @@ public class DMXIPController implements DMXController {
 
                     // If you need to log the actual data:
                     byte[] data = Arrays.copyOf(receivePacket.getData(), receivePacket.getLength());
-                    LOGGER.trace("Received data: {}", Arrays.toString(data));
-
+                    if (LOGGER.isTraceEnabled()) {
+                        LOGGER.trace("Received data: {}", Arrays.toString(data));
+                    }
                 } catch (SocketTimeoutException e) {
                     // Timeout is normal, continue listening
                     continue;
