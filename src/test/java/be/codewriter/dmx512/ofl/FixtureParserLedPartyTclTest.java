@@ -11,6 +11,9 @@ import java.io.InputStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * https://open-fixture-library.org/eurolite/led-party-tcl-spot
+ */
 public class FixtureParserLedPartyTclTest {
     private static final String TEST_FIXTURE_PATH = "ofl/eurolite/led-party-tcl-spot.json";
     private Fixture fixture;

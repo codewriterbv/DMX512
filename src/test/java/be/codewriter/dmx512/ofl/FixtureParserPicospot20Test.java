@@ -12,6 +12,9 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * https://open-fixture-library.org/fun-generation/picospot-20-led
+ */
 class FixtureParserPicospot20Test {
     private static final String TEST_FIXTURE_PATH = "ofl/fun-generation/picospot-20-led.json";
     private OpenFormatLibraryParser parser;
