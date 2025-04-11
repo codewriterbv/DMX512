@@ -50,8 +50,8 @@ public class Main {
 
                 // Create some fixtures
                 var fixture = getFixture();
-                DMXClient rgb1 = new DMXClient(fixture, fixture.modes().get(0), 0);
-                DMXClient rgb2 = new DMXClient(fixture, fixture.modes().get(0), 5);
+                DMXClient rgb1 = new DMXClient(fixture, fixture.modes().getFirst(), 0);
+                DMXClient rgb2 = new DMXClient(fixture, fixture.modes().getFirst(), 5);
                 clients.addAll(List.of(rgb1, rgb2));
 
                 // Set colors
