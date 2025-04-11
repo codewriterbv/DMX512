@@ -21,7 +21,7 @@ public record Fixture(
     public int getChannelIndex(String key) {
         var counter = 0;
         for (var entry : availableChannels.entrySet()) {
-            if (entry.getKey().equalsIgnoreCase(key)) {
+            if (entry.getKey().equalsIgnoreCase(key.trim())) {
                 return counter;
             }
             counter++;

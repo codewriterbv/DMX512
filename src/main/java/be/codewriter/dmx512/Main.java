@@ -55,8 +55,8 @@ public class Main {
                 clients.addAll(List.of(rgb1, rgb2));
 
                 // Set colors
-                rgb1.setValue("red", 255);
-                rgb2.setValue("blue", 255);
+                rgb1.setValue("red", (byte) 255);
+                rgb2.setValue("blue", (byte) 255);
 
                 // Send the data to the DMX interface
                 controller.render(clients);
@@ -64,10 +64,10 @@ public class Main {
                 // Fade effect example
                 for (int i = 0; i <= 100; i++) {
                     float ratio = i / 100.0f;
-                    rgb1.setValue("red", (int) (255 * (1 - ratio)));
-                    rgb1.setValue("blue", (int) (255 * ratio));
-                    rgb2.setValue("green", (int) (255 * ratio));
-                    rgb2.setValue("blue", (int) (255 * (1 - ratio)));
+                    rgb1.setValue("red", (byte) (255 * (1 - ratio)));
+                    rgb1.setValue("blue", (byte) (255 * ratio));
+                    rgb2.setValue("green", (byte) (255 * ratio));
+                    rgb2.setValue("blue", (byte) (255 * (1 - ratio)));
                     controller.render(clients);
                     Thread.sleep(50);
                 }

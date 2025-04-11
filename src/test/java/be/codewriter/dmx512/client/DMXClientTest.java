@@ -10,8 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class DMXClientTest {
 
@@ -41,13 +40,13 @@ class DMXClientTest {
                 )) // modes
         );
 
-        client = new DMXClient(fixture, fixture.modes().get(0), 0);
+        client = new DMXClient(fixture, fixture.modes().getFirst(), 0);
 
-        client.setValue("red", 150);
-        client.setValue("green", 5);
-        client.setValue("blue", 255);
-        client.setValue("Dimmer", 127);
-        client.setValue("effects", 128);
+        client.setValue("red", (byte) 150);
+        client.setValue("green", (byte) 5);
+        client.setValue("blue", (byte) 255);
+        client.setValue("Dimmer", (byte) 127);
+        client.setValue("effects", (byte) 128);
     }
 
     @Test
@@ -75,6 +74,19 @@ class DMXClientTest {
                 () -> assertEquals((byte) 255, message[3], "Blue"),
                 () -> assertEquals((byte) 127, message[4], "Dimmer"),
                 () -> assertEquals((byte) 128, message[5], "Effects")
+        );
+    }
+
+    @Test
+    void mustReturnCorrectHasChannel() {
+        assertAll(
+                () -> assertTrue(client.hasChannel("red")),
+                () -> assertTrue(client.hasChannel("Red")),
+                () -> assertTrue(client.hasChannel("RED")),
+                () -> assertTrue(client.hasChannel(" red")),
+                () -> assertTrue(client.hasChannel("red ")),
+                () -> assertTrue(client.hasChannel(" red ")),
+                () -> assertFalse(client.hasChannel("rod"))
         );
     }
 }

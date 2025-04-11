@@ -35,14 +35,15 @@ public class DMXClient {
         return startChannel;
     }
 
-    public void setValue(int idx, int value) {
-        if (value < 0 || value > 255) {
-            LOGGER.error("Value {} is out of bounds, will send {}", value, (byte) value);
-        }
-        values[idx] = (byte) value;
+    public boolean hasChannel(String key) {
+        return fixture.getChannelIndex(key) >= 0;
     }
 
-    public void setValue(String key, int value) {
+    public void setValue(int idx, byte value) {
+        values[idx] = value;
+    }
+
+    public void setValue(String key, byte value) {
         var idx = fixture.getChannelIndex(key);
         if (idx == -1) {
             LOGGER.error("Can't find the channel index for key '{}'", key);
