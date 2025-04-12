@@ -36,7 +36,7 @@ public class DMXClient {
     }
 
     public boolean hasChannel(String key) {
-        return fixture.getChannelIndex(key) >= 0;
+        return selectedMode.getChannelIndex(key) >= 0;
     }
 
     public void setValue(int idx, byte value) {
@@ -44,7 +44,7 @@ public class DMXClient {
     }
 
     public void setValue(String key, byte value) {
-        var idx = fixture.getChannelIndex(key);
+        var idx = selectedMode.getChannelIndex(key);
         if (idx == -1) {
             LOGGER.error("Can't find the channel index for key '{}'", key);
             return;
@@ -57,7 +57,7 @@ public class DMXClient {
     }
 
     public byte getValue(String key) {
-        var idx = fixture.getChannelIndex(key);
+        var idx = selectedMode.getChannelIndex(key);
         if (idx == -1) {
             LOGGER.error("Can't find the channel index for key '{}', will return value 0", key);
             return 0;

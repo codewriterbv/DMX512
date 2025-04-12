@@ -18,17 +18,6 @@ public record Fixture(
         LinkedHashMap<String, Channel> availableChannels,
         List<Mode> modes
 ) {
-    public int getChannelIndex(String key) {
-        var counter = 0;
-        for (var entry : availableChannels.entrySet()) {
-            if (entry.getKey().equalsIgnoreCase(key.trim())) {
-                return counter;
-            }
-            counter++;
-        }
-        return -1;
-    }
-
     public Mode getMode(String name) {
         return modes.stream()
                 .filter(mode -> mode.name().equalsIgnoreCase(name))

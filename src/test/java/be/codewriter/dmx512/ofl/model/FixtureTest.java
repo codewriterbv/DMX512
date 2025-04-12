@@ -40,9 +40,13 @@ class FixtureTest {
     @Test
     void mustReturnCorrectChannelIndex() {
         assertAll(
-                () -> assertEquals(0, fixture.getChannelIndex("red")),
-                () -> assertEquals(0, fixture.getChannelIndex("RED")),
-                () -> assertEquals(0, fixture.getChannelIndex("Red"))
+                () -> assertEquals(0, fixture.getMode("5-Channel").getChannelIndex("red")),
+                () -> assertEquals(0, fixture.getMode("5-Channel").getChannelIndex("RED")),
+                () -> assertEquals(0, fixture.getMode("5-Channel").getChannelIndex("Red")),
+                () -> assertEquals(1, fixture.getMode("5-Channel").getChannelIndex("Green")),
+                () -> assertEquals(2, fixture.getMode("5-Channel").getChannelIndex("blue")),
+                () -> assertEquals(3, fixture.getMode("5-Channel").getChannelIndex(" di mm / er ")),
+                () -> assertEquals(4, fixture.getMode("5-Channel").getChannelIndex("effects "))
         );
     }
 
