@@ -20,7 +20,7 @@ public class DMXClient {
         this.fixture = fixture;
         this.selectedMode = selectedMode;
         this.startChannel = startChannel;
-        this.values = new byte[fixture.availableChannels().size()];
+        this.values = new byte[selectedMode.channels().size()];
     }
 
     public Fixture getFixture() {

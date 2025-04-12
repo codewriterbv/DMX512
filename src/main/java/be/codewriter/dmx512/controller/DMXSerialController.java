@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HexFormat;
 import java.util.List;
 
 /**
@@ -77,6 +78,11 @@ public class DMXSerialController implements DMXController {
      */
     @Override
     public void render(List<DMXClient> clients) {
+        byte[] dmxData = DMXMessage.build(clients);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("DMX message: {}", HexFormat.of().formatHex(dmxData));
+        }
+
         if (!connected || outputStream == null) {
             LOGGER.error("Not connected to DMX interface, can't render data to the devices");
             return;
@@ -102,7 +108,6 @@ public class DMXSerialController implements DMXController {
 
         // Send DMX data
         try {
-            byte[] dmxData = DMXMessage.build(clients);
             outputStream.write(dmxData);
             outputStream.flush();
         } catch (Exception e) {
