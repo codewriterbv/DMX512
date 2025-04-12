@@ -30,9 +30,9 @@ class FixtureTest {
                 null, // wheels
                 channels,
                 List.of(new Mode(
-                        "5-Channel",
-                        "5ch",
-                        List.of("Red", "Green", "Blue", "Dimmer", "Effects")
+                        "6-Channel",
+                        "6ch",
+                        List.of("Red", "Green", "Blue", "Dimmer", "Effects", "Pan/Tilt Speed")
                 )) // modes
         );
     }
@@ -40,20 +40,20 @@ class FixtureTest {
     @Test
     void mustReturnCorrectChannelIndex() {
         assertAll(
-                () -> assertEquals(0, fixture.getMode("5-Channel").getChannelIndex("red")),
-                () -> assertEquals(0, fixture.getMode("5-Channel").getChannelIndex("RED")),
-                () -> assertEquals(0, fixture.getMode("5-Channel").getChannelIndex("Red")),
-                () -> assertEquals(1, fixture.getMode("5-Channel").getChannelIndex("Green")),
-                () -> assertEquals(2, fixture.getMode("5-Channel").getChannelIndex("blue")),
-                () -> assertEquals(3, fixture.getMode("5-Channel").getChannelIndex(" di mm / er ")),
-                () -> assertEquals(4, fixture.getMode("5-Channel").getChannelIndex("effects "))
+                () -> assertEquals(0, fixture.getMode("6-Channel").getChannelIndex("red")),
+                () -> assertEquals(0, fixture.getMode("6-Channel").getChannelIndex("RED")),
+                () -> assertEquals(0, fixture.getMode("6-Channel").getChannelIndex("Red")),
+                () -> assertEquals(1, fixture.getMode("6-Channel").getChannelIndex("Green")),
+                () -> assertEquals(2, fixture.getMode("6-Channel").getChannelIndex("blue")),
+                () -> assertEquals(3, fixture.getMode("6-Channel").getChannelIndex(" di mm / er ")),
+                () -> assertEquals(5, fixture.getMode("6-Channel").getChannelIndex("Pan/Tilt Speed"))
         );
     }
 
     @Test
     void mustReturnCorrectMode() {
         assertAll(
-                () -> assertEquals("5ch", fixture.getMode("5-Channel").shortName()),
+                () -> assertEquals("6ch", fixture.getMode("6-Channel").shortName()),
                 () -> assertNull(fixture.getMode("11-Channel"))
         );
     }
