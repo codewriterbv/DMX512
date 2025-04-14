@@ -64,4 +64,12 @@ public class DMXClient {
         }
         return getValue(idx);
     }
+
+    public int getDataLength() {
+        return values.length;
+    }
+
+    public byte[] getData() {
+        return values;
+    }
 }
