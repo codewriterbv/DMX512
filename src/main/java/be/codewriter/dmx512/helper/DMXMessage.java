@@ -6,20 +6,29 @@ import java.util.List;
 
 public class DMXMessage {
 
-    public static byte[] build(List<DMXClient> clients) {
+    private final byte[] data;
+
+    public DMXMessage(List<DMXClient> clients) {
         var length = clients.stream()
                 .mapToInt(client -> client.getStartChannel() + client.getDataLength())
                 .max()
                 .orElse(0);
-        final byte[] dmxData = new byte[length];
-        dmxData[0] = 0; // DMX sta1 code
+        data = new byte[length];
+        data[0] = 0; // DMX sta1 code
         for (DMXClient client : clients) {
             var startIndex = client.getStartChannel();
             length = client.getDataLength();
             for (var idx = 0; idx < length; idx++) {
-                dmxData[startIndex + idx] = client.getValue(idx);
+                data[startIndex + idx] = client.getValue(idx);
             }
         }
-        return dmxData;
+    }
+
+    public byte[] getData() {
+        return data;
+    }
+
+    public int getLength() {
+        return data.length;
     }
 }

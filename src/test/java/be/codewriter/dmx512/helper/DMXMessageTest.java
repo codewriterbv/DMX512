@@ -16,7 +16,8 @@ class DMXMessageTest {
         var client1 = MotherObjects.fiveChannelClient((byte) 0x01, (byte) 0x02, (byte) 0x03, (byte) 0x04, (byte) 0x05, 1);
         var client2 = MotherObjects.nineChannelClient((byte) 0x11, (byte) 0x22, (byte) 0x33, (byte) 0x44, (byte) 0x55, (byte) 0x66, (byte) 0x77, (byte) 0x88, (byte) 0x99, 10);
 
-        var data = DMXMessage.build(List.of(client1, client2));
+        var dmxMessage = new DMXMessage(List.of(client1, client2));
+        var data = dmxMessage.getData();
         System.out.printf("Data: " + HexFormat.of().formatHex(data));
 
         assertAll(

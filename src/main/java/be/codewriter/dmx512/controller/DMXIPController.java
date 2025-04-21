@@ -128,9 +128,9 @@ public class DMXIPController implements DMXController {
         return packet;
     }
 
-    private byte[] createSACNPacket(byte[] dmxData) {
+    private byte[] createSACNPacket(DMXMessage dmxMessage) {
         // sACN packet header (simplified version)
-        byte[] packet = new byte[126 + dmxData.length];
+        byte[] packet = new byte[126 + dmxMessage.getLength()];
 
         // Root layer
         packet[0] = 0x00; // Preamble Size
@@ -154,12 +154,12 @@ public class DMXIPController implements DMXController {
         packet[118] = (byte) 0xa1; // Address Type & Data Type
         packet[119] = (byte) 0x00; // First Property Address
         packet[120] = (byte) 0x00; // Address Increment
-        packet[121] = (byte) ((dmxData.length + 1) >> 8);
-        packet[122] = (byte) (dmxData.length + 1);
+        packet[121] = (byte) ((dmxMessage.getLength() + 1) >> 8);
+        packet[122] = (byte) (dmxMessage.getLength() + 1);
         packet[123] = (byte) 0x00; // DMX Start Code
 
         // Copy DMX data
-        System.arraycopy(dmxData, 0, packet, 124, dmxData.length);
+        System.arraycopy(dmxMessage.getData(), 0, packet, 124, dmxMessage.getLength());
 
         return packet;
     }
@@ -207,7 +207,7 @@ public class DMXIPController implements DMXController {
     }
 
     @Override
-    public void render(List<DMXClient> clients) {
+    public synchronized void render(List<DMXClient> clients) {
         if (!connected || socket == null) {
             LOGGER.error("Not connected to DMX network, can't render data to the devices");
             return;
@@ -233,12 +233,12 @@ public class DMXIPController implements DMXController {
         }
 
         // Create and send packet based on protocol
-        byte[] dmxData = DMXMessage.build(clients);
+        var dmxMessage = new DMXMessage(clients);
         byte[] packet;
         if (protocol == Protocol.ARTNET) {
-            packet = createArtNetPacket(dmxData);
+            packet = createArtNetPacket(dmxMessage);
         } else {
-            packet = createSACNPacket(dmxData);
+            packet = createSACNPacket(dmxMessage);
         }
 
         try {
@@ -309,9 +309,9 @@ public class DMXIPController implements DMXController {
         listenerThread.start();
     }
 
-    private byte[] createArtNetPacket(byte[] dmxData) {
+    private byte[] createArtNetPacket(DMXMessage dmxMessage) {
         // Art-Net packet structure
-        byte[] packet = new byte[18 + dmxData.length];
+        byte[] packet = new byte[18 + dmxMessage.getLength()];
 
         // Art-Net header "Art-Net"
         packet[0] = 'A';
@@ -342,11 +342,11 @@ public class DMXIPController implements DMXController {
         packet[15] = 0x00;
 
         // Length of DMX data
-        packet[16] = (byte) ((dmxData.length >> 8) & 0xFF);
-        packet[17] = (byte) (dmxData.length & 0xFF);
+        packet[16] = (byte) ((dmxMessage.getLength() >> 8) & 0xFF);
+        packet[17] = (byte) (dmxMessage.getLength() & 0xFF);
 
         // Copy DMX data
-        System.arraycopy(dmxData, 0, packet, 18, dmxData.length);
+        System.arraycopy(dmxMessage.getData(), 0, packet, 18, dmxMessage.getLength());
 
         return packet;
     }

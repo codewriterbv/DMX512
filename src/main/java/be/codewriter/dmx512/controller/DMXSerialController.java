@@ -9,10 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HexFormat;
-import java.util.List;
+import java.util.*;
 
 /**
  * DMX Serial Controller.
@@ -22,9 +19,17 @@ public class DMXSerialController implements DMXController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXSerialController.class.getName());
 
     private static final int DMX_UNIVERSE_SIZE = 512;
+    private final List<DMXMessage> messages;
     private SerialPort serialPort;
     private OutputStream outputStream;
     private boolean connected = false;
+
+    public DMXSerialController() {
+        this.messages = Collections.synchronizedList(new ArrayList<>());
+
+        // Start message processing thread
+        Thread.startVirtualThread(this::processMessages);
+    }
 
     /**
      * Connect to the USB-DMX interface
@@ -74,13 +79,14 @@ public class DMXSerialController implements DMXController {
     }
 
     /**
-     * Send the current DMX universe data to the interface
+     * Add the current DMX universe data to list of messages to be sent to the DMX interface.
+     * This list will be processed asap in a separate thread.
      */
     @Override
-    public void render(List<DMXClient> clients) {
-        byte[] dmxData = DMXMessage.build(clients);
+    public synchronized void render(List<DMXClient> clients) {
+        var dmxMessage = new DMXMessage(clients);
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("DMX message: {}", HexFormat.of().formatHex(dmxData));
+            LOGGER.debug("DMX message: {}", HexFormat.of().formatHex(dmxMessage.getData()));
         }
 
         if (!connected || outputStream == null) {
@@ -88,6 +94,42 @@ public class DMXSerialController implements DMXController {
             return;
         }
 
+        synchronized (messages) {
+            messages.add(dmxMessage);
+            messages.notify(); // Notify the processing thread that new data is available
+        }
+    }
+
+    /**
+     * Continuous processing of the message list.
+     */
+    private void processMessages() {
+        while (!Thread.currentThread().isInterrupted()) {
+            DMXMessage message = null;
+
+            synchronized (messages) {
+                while (messages.isEmpty()) {
+                    try {
+                        messages.wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                }
+
+                message = messages.remove(0);
+            }
+
+            if (message != null) {
+                sendMessage(message);
+            }
+        }
+    }
+
+    /**
+     * Send the given DMX message to the DMX interface.
+     */
+    private void sendMessage(DMXMessage message) {
         // Send DMX break
         serialPort.setBreak();
 
@@ -95,6 +137,7 @@ public class DMXSerialController implements DMXController {
             Thread.sleep(1); // Break duration (1ms)
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            return;
         }
 
         // Clear DMX break
@@ -104,11 +147,12 @@ public class DMXSerialController implements DMXController {
             Thread.sleep(1); // Mark After Break (MAB) duration
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            return;
         }
 
         // Send DMX data
         try {
-            outputStream.write(dmxData);
+            outputStream.write(message.getData());
             outputStream.flush();
         } catch (Exception e) {
             LOGGER.error("Failed to send DMX data: {}", e.getMessage());
