@@ -36,7 +36,7 @@ public class Main {
             var controller = new DMXSerialController();
 
             // List available ports
-            LOGGER.info("Available ports:");
+            LOGGER.info("Available serial ports:");
             for (var port : controller.getAvailablePorts()) {
                 LOGGER.info("\t{}", port);
             }
@@ -61,14 +61,19 @@ public class Main {
     private static void demoIp() {
         var controller = new DMXIPController();
 
-        var list = controller.discoverDevices();
-        list.forEach(device -> LOGGER.info("Art-Net node found: {}", device));
+        LOGGER.info("Available IP ports:");
+        for (var port : controller.discoverDevices()) {
+            LOGGER.info("\t{}", port);
+        }
 
         controller.connect("172.16.1.144"); // IP address of your Art-Net node
         runDemo(controller);
     }
 
     private static void runDemo(DMXController controller) {
+        LOGGER.info("Running demo with controller {}", controller);
+        LOGGER.info("\tConnected: {}", controller.isConnected());
+        
         try {
             List<DMXClient> clients = new ArrayList<>();
 
@@ -79,6 +84,7 @@ public class Main {
             clients.addAll(List.of(rgb1, rgb2));
 
             // Set colors
+            LOGGER.info("Setting colors");
             rgb1.setValue("red", (byte) 255);
             rgb2.setValue("blue", (byte) 255);
 
@@ -86,6 +92,7 @@ public class Main {
             controller.render(clients);
 
             // Fade effect example
+            LOGGER.info("Fading colors");
             for (int i = 0; i <= 100; i++) {
                 float ratio = i / 100.0f;
                 rgb1.setValue("red", (byte) (255 * (1 - ratio)));

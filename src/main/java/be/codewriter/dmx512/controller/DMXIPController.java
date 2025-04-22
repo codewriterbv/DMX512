@@ -15,7 +15,7 @@ import java.util.*;
  * DMX IP Controller.
  * Controls DMX lights over IP-to-DMX interface.
  */
-public class DMXIPController implements DMXController {
+public class DMXIPController extends DMXChangeNotifier implements DMXController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXIPController.class.getName());
 
     private static final int DEFAULT_ARTNET_PORT = 6454;
@@ -207,10 +207,12 @@ public class DMXIPController implements DMXController {
             this.port = DEFAULT_ARTNET_PORT;
             this.socket = new DatagramSocket();
             this.connected = true;
+            notifyListeners(DMXChangeMessage.CONNECTED);
             startListening();
             return true;
         } catch (IOException e) {
             this.connected = false;
+            notifyListeners(DMXChangeMessage.DISCONNECTED);
             return false;
         }
     }
@@ -278,6 +280,7 @@ public class DMXIPController implements DMXController {
             socket.close();
         }
         connected = false;
+        notifyListeners(DMXChangeMessage.DISCONNECTED);
     }
 
     @Override

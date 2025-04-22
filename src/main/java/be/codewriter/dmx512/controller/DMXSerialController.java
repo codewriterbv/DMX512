@@ -15,7 +15,7 @@ import java.util.*;
  * DMX Serial Controller.
  * Controls DMX lights over USB-to-DMX interface using jSerialComm.
  */
-public class DMXSerialController implements DMXController {
+public class DMXSerialController extends DMXChangeNotifier implements DMXController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXSerialController.class.getName());
 
     private static final int DMX_UNIVERSE_SIZE = 512;
@@ -71,9 +71,11 @@ public class DMXSerialController implements DMXController {
         if (serialPort.openPort()) {
             outputStream = serialPort.getOutputStream();
             connected = true;
+            notifyListeners(DMXChangeMessage.CONNECTED);
             return true;
         } else {
             LOGGER.error("Failed to open port: {}", portName);
+            notifyListeners(DMXChangeMessage.DISCONNECTED);
             return false;
         }
     }
@@ -175,6 +177,7 @@ public class DMXSerialController implements DMXController {
                     serialPort.closePort();
                 }
                 connected = false;
+                notifyListeners(DMXChangeMessage.DISCONNECTED);
             }
         }
     }
