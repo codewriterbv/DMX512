@@ -1,7 +1,6 @@
 package be.codewriter.dmx512;
 
 import be.codewriter.dmx512.client.DMXClient;
-import be.codewriter.dmx512.controller.DMXController;
 import be.codewriter.dmx512.controller.DMXIPController;
 import be.codewriter.dmx512.controller.DMXSerialController;
 import be.codewriter.dmx512.ofl.OpenFormatLibraryParser;
@@ -17,8 +16,8 @@ public class Main {
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class.getName());
 
     public static void main(String[] args) {
-        demoSerial();
         demoIp();
+        demoSerial();
     }
 
     private static Fixture getFixture() {
@@ -33,7 +32,7 @@ public class Main {
 
     private static void demoSerial() {
         try {
-            DMXSerialController controller = new DMXSerialController();
+            var controller = new DMXSerialController();
             List<DMXClient> clients = new ArrayList<>();
 
             // List available ports
@@ -82,7 +81,11 @@ public class Main {
     }
 
     private static void demoIp() {
-        DMXController controller = new DMXIPController();
+        var controller = new DMXIPController();
+
+        var list = controller.discoverDevices();
+        list.forEach(device -> LOGGER.info("Art-Net node found: {}", device));
+
         controller.connect("192.168.1.100");  // IP address of your Art-Net node
     }
 }
