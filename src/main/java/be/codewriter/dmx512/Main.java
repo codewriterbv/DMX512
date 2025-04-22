@@ -1,6 +1,7 @@
 package be.codewriter.dmx512;
 
 import be.codewriter.dmx512.client.DMXClient;
+import be.codewriter.dmx512.controller.DMXController;
 import be.codewriter.dmx512.controller.DMXIPController;
 import be.codewriter.dmx512.controller.DMXSerialController;
 import be.codewriter.dmx512.ofl.OpenFormatLibraryParser;
@@ -33,7 +34,6 @@ public class Main {
     private static void demoSerial() {
         try {
             var controller = new DMXSerialController();
-            List<DMXClient> clients = new ArrayList<>();
 
             // List available ports
             LOGGER.info("Available ports:");
@@ -47,29 +47,7 @@ public class Main {
             if (controller.connect("/dev/ttyUSB0")) {
                 LOGGER.info("Connected to DMX interface");
 
-                // Create some fixtures
-                var fixture = getFixture();
-                DMXClient rgb1 = new DMXClient(fixture, fixture.modes().getFirst(), 0);
-                DMXClient rgb2 = new DMXClient(fixture, fixture.modes().getFirst(), 5);
-                clients.addAll(List.of(rgb1, rgb2));
-
-                // Set colors
-                rgb1.setValue("red", (byte) 255);
-                rgb2.setValue("blue", (byte) 255);
-
-                // Send the data to the DMX interface
-                controller.render(clients);
-
-                // Fade effect example
-                for (int i = 0; i <= 100; i++) {
-                    float ratio = i / 100.0f;
-                    rgb1.setValue("red", (byte) (255 * (1 - ratio)));
-                    rgb1.setValue("blue", (byte) (255 * ratio));
-                    rgb2.setValue("green", (byte) (255 * ratio));
-                    rgb2.setValue("blue", (byte) (255 * (1 - ratio)));
-                    controller.render(clients);
-                    Thread.sleep(50);
-                }
+                runDemo(controller);
 
                 controller.close();
             } else {
@@ -86,6 +64,39 @@ public class Main {
         var list = controller.discoverDevices();
         list.forEach(device -> LOGGER.info("Art-Net node found: {}", device));
 
-        controller.connect("192.168.1.100");  // IP address of your Art-Net node
+        controller.connect("172.16.1.144"); // IP address of your Art-Net node
+        runDemo(controller);
+    }
+
+    private static void runDemo(DMXController controller) {
+        try {
+            List<DMXClient> clients = new ArrayList<>();
+
+            // Create some fixtures
+            var fixture = getFixture();
+            DMXClient rgb1 = new DMXClient(fixture, fixture.modes().getFirst(), 0);
+            DMXClient rgb2 = new DMXClient(fixture, fixture.modes().getFirst(), 5);
+            clients.addAll(List.of(rgb1, rgb2));
+
+            // Set colors
+            rgb1.setValue("red", (byte) 255);
+            rgb2.setValue("blue", (byte) 255);
+
+            // Send the data to the DMX interface
+            controller.render(clients);
+
+            // Fade effect example
+            for (int i = 0; i <= 100; i++) {
+                float ratio = i / 100.0f;
+                rgb1.setValue("red", (byte) (255 * (1 - ratio)));
+                rgb1.setValue("blue", (byte) (255 * ratio));
+                rgb2.setValue("green", (byte) (255 * ratio));
+                rgb2.setValue("blue", (byte) (255 * (1 - ratio)));
+                controller.render(clients);
+                Thread.sleep(50);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error in the demo: {}", e.getMessage());
+        }
     }
 }

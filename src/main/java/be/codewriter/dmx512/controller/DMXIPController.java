@@ -193,6 +193,7 @@ public class DMXIPController implements DMXController {
 
     @Override
     public boolean connect(String ipAddress) {
+        LOGGER.debug("Connecting to DMX network at {}", ipAddress);
         try {
             this.address = InetAddress.getByName(ipAddress);
             this.port = DEFAULT_ARTNET_PORT;
@@ -249,6 +250,8 @@ public class DMXIPController implements DMXController {
                     port
             );
             socket.send(datagramPacket);
+            LOGGER.info("Sent packet to {}, length: {}",
+                    socket.getRemoteSocketAddress(), datagramPacket.getLength());
 
             // Update statistics
             packetsSent++;
@@ -277,20 +280,20 @@ public class DMXIPController implements DMXController {
     private void startListening() {
         listenerThread = new Thread(() -> {
             byte[] receiveBuffer = new byte[1024]; // Adjust buffer size as needed
-            DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+            DatagramPacket receivedPacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
 
             while (listening) {
                 try {
-                    socket.receive(receivePacket); // This blocks until a packet is received
+                    socket.receive(receivedPacket); // This blocks until a packet is received
 
                     // Log the received data
                     LOGGER.debug("Received packet from {}:{}, length: {}",
-                            receivePacket.getAddress(),
-                            receivePacket.getPort(),
-                            receivePacket.getLength());
+                            receivedPacket.getAddress(),
+                            receivedPacket.getPort(),
+                            receivedPacket.getLength());
 
                     // If you need to log the actual data:
-                    byte[] data = Arrays.copyOf(receivePacket.getData(), receivePacket.getLength());
+                    byte[] data = Arrays.copyOf(receivedPacket.getData(), receivedPacket.getLength());
                     if (LOGGER.isTraceEnabled()) {
                         LOGGER.trace("Received data: {}", Arrays.toString(data));
                     }
