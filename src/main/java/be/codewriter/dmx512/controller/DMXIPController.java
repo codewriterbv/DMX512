@@ -8,10 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketTimeoutException;
+import java.net.*;
 import java.util.*;
 
 /**
@@ -52,8 +49,14 @@ public class DMXIPController implements DMXController {
 
     public List<DMXIpDevice> discoverDevices() {
         List<DMXIpDevice> DMXIpDevices = new ArrayList<>();
+        Set<InetAddress> localAddresses = new HashSet<>();
 
         try {
+            // Get all local addresses
+            for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+                localAddresses.addAll(Collections.list(ni.getInetAddresses()));
+            }
+
             // Send Art-Net poll packet
             byte[] pollPacket = createArtNetPollPacket();
             DatagramPacket packet = new DatagramPacket(
@@ -63,8 +66,8 @@ public class DMXIPController implements DMXController {
                     DEFAULT_ARTNET_PORT
             );
 
-            // Create temporary socket for discovery
-            try (DatagramSocket discoverySocket = new DatagramSocket()) {
+            // Create a temporary socket for discovery
+            try (DatagramSocket discoverySocket = new DatagramSocket(DEFAULT_ARTNET_PORT)) {
                 discoverySocket.setBroadcast(true);
                 discoverySocket.send(packet);
 
@@ -76,6 +79,11 @@ public class DMXIPController implements DMXController {
                     try {
                         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                         discoverySocket.receive(receivePacket);
+
+                        // Skip if the packet is from our own machine
+                        if (localAddresses.contains(receivePacket.getAddress())) {
+                            continue;
+                        }
 
                         DMXIpDevice DMXIpDevice = parseArtNetPollReply(receivePacket);
                         if (DMXIpDevice != null) {
@@ -250,7 +258,7 @@ public class DMXIPController implements DMXController {
                     port
             );
             socket.send(datagramPacket);
-            LOGGER.info("Sent packet to {}, length: {}",
+            LOGGER.debug("Sent packet to {}, length: {}",
                     socket.getRemoteSocketAddress(), datagramPacket.getLength());
 
             // Update statistics
