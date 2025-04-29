@@ -66,39 +66,71 @@ public class Main {
             LOGGER.info("\t{}", port);
         }
 
-        controller.connect("172.16.1.144"); // IP address of your Art-Net node
+        controller.connect("172.16.1.145"); // IP address of your Art-Net node
         runDemo(controller);
     }
 
     private static void runDemo(DMXController controller) {
         LOGGER.info("Running demo with controller {}", controller);
         LOGGER.info("\tConnected: {}", controller.isConnected());
-        
+
         try {
             List<DMXClient> clients = new ArrayList<>();
 
             // Create some fixtures
             var fixture = getFixture();
-            DMXClient rgb1 = new DMXClient(fixture, fixture.modes().getFirst(), 0);
-            DMXClient rgb2 = new DMXClient(fixture, fixture.modes().getFirst(), 5);
+            DMXClient rgb1 = new DMXClient(fixture, fixture.modes().getFirst(), 1);
+            DMXClient rgb2 = new DMXClient(fixture, fixture.modes().getFirst(), 6);
             clients.addAll(List.of(rgb1, rgb2));
 
-            // Set colors
-            LOGGER.info("Setting colors");
-            rgb1.setValue("red", (byte) 255);
-            rgb2.setValue("blue", (byte) 255);
-
-            // Send the data to the DMX interface
+            // Set dimmer full
+            rgb1.setValue("dimmer", (byte) 255);
             controller.render(clients);
+            Thread.sleep(50);
+
+            // Set colors
+            LOGGER.info("Setting RED");
+            rgb1.setValue("red", (byte) 255);
+            rgb1.setValue("green", (byte) 0);
+            rgb1.setValue("blue", (byte) 0);
+            controller.render(clients);
+            Thread.sleep(3000);
+
+            LOGGER.info("Setting GREEN");
+            rgb1.setValue("red", (byte) 0);
+            rgb1.setValue("green", (byte) 255);
+            rgb1.setValue("blue", (byte) 0);
+            controller.render(clients);
+            Thread.sleep(3000);
+
+            LOGGER.info("Setting BLUE");
+            rgb1.setValue("red", (byte) 0);
+            rgb1.setValue("green", (byte) 0);
+            rgb1.setValue("blue", (byte) 255);
+            controller.render(clients);
+            Thread.sleep(3000);
+
+            LOGGER.info("Setting WHITE");
+            rgb1.setValue("red", (byte) 255);
+            rgb1.setValue("green", (byte) 255);
+            rgb1.setValue("blue", (byte) 255);
+            controller.render(clients);
+            Thread.sleep(3000);
 
             // Fade effect example
             LOGGER.info("Fading colors");
+            rgb1.setValue("red", (byte) 0);
+            rgb1.setValue("green", (byte) 0);
+            rgb1.setValue("blue", (byte) 0);
+            controller.render(clients);
+            Thread.sleep(50);
+
             for (int i = 0; i <= 100; i++) {
                 float ratio = i / 100.0f;
                 rgb1.setValue("red", (byte) (255 * (1 - ratio)));
                 rgb1.setValue("blue", (byte) (255 * ratio));
-                rgb2.setValue("green", (byte) (255 * ratio));
-                rgb2.setValue("blue", (byte) (255 * (1 - ratio)));
+                //rgb2.setValue("green", (byte) (255 * ratio));
+                //rgb2.setValue("blue", (byte) (255 * (1 - ratio)));
                 controller.render(clients);
                 Thread.sleep(50);
             }

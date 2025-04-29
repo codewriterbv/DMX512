@@ -325,7 +325,8 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
 
     private byte[] createArtNetPacket(DMXMessage dmxMessage) {
         // Art-Net packet structure
-        byte[] packet = new byte[18 + dmxMessage.getLength()];
+        int packageLength = dmxMessage.getLength();
+        byte[] packet = new byte[18 + packageLength];
 
         // Art-Net header "Art-Net"
         packet[0] = 'A';
@@ -356,11 +357,11 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
         packet[15] = 0x00;
 
         // Length of DMX data
-        packet[16] = (byte) ((dmxMessage.getLength() >> 8) & 0xFF);
-        packet[17] = (byte) (dmxMessage.getLength() & 0xFF);
+        packet[16] = (byte) ((packageLength >> 8) & 0xFF);
+        packet[17] = (byte) (packageLength & 0xFF);
 
         // Copy DMX data
-        System.arraycopy(dmxMessage.getData(), 0, packet, 18, dmxMessage.getLength());
+        System.arraycopy(dmxMessage.getData(), 0, packet, 18, packageLength);
 
         return packet;
     }
