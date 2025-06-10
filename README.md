@@ -2,6 +2,14 @@
 
 Java library for the DMX512 protocol. Can be used to connect with USB-to-DMX and IP-to-DMX controllers. It can load fixture definitions from the Open Fixture Library (OFL) to easily create a Java (user interface) application that can interact with many types of DMX devices.
 
+## Computer to DMX Devices
+
+* Serial
+  * [Enttec Open DMX USB Interface](https://www.thomann.de/be/enttec_open_dmx_usb_interface.htm)
+  * [DSD TECH SH-RS09B USB to DMX Cable](https://www.amazon.com.be/gp/product/B07WV6P5W6/)
+* Network
+  * [JUNELIONY ArtNet 1024 2-Port Sulite DMX LAN512 2-Port ArtNet Converter](https://www.amazon.com.be/dp/B0CYPQ2Z4V)
+  
 ## Fixtures
 
 Uses the [Open Fixture Library (OFL)](https://open-fixture-library.org/) to create DMX fixtures as Java objects. Fixtures can be parsed from the [OFL JSON format](https://github.com/OpenLightingProject/open-fixture-library/blob/master/docs/fixture-format.md).
