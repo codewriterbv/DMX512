@@ -18,21 +18,21 @@ class FixtureTest {
     @Test
     void mustReturnCorrectChannelIndex() {
         assertAll(
-                () -> assertEquals(0, fixture.getMode("9-Channel").getChannelIndex("red")),
-                () -> assertEquals(0, fixture.getMode("9-Channel").getChannelIndex("RED")),
-                () -> assertEquals(0, fixture.getMode("9-Channel").getChannelIndex("Red")),
-                () -> assertEquals(1, fixture.getMode("9-Channel").getChannelIndex("Green")),
-                () -> assertEquals(2, fixture.getMode("9-Channel").getChannelIndex("blue")),
-                () -> assertEquals(3, fixture.getMode("9-Channel").getChannelIndex(" di mm / er ")),
-                () -> assertEquals(7, fixture.getMode("9-Channel").getChannelIndex("Pan/Tilt Speed"))
+                () -> assertEquals(0, fixture.getModeByName("9-Channel").getChannelIndex("red")),
+                () -> assertEquals(0, fixture.getModeByName("9-Channel").getChannelIndex("RED")),
+                () -> assertEquals(0, fixture.getModeByName("9-Channel").getChannelIndex("Red")),
+                () -> assertEquals(1, fixture.getModeByName("9-Channel").getChannelIndex("Green")),
+                () -> assertEquals(2, fixture.getModeByName("9-Channel").getChannelIndex("blue")),
+                () -> assertEquals(3, fixture.getModeByName("9-Channel").getChannelIndex(" di mm / er ")),
+                () -> assertEquals(7, fixture.getModeByName("9-Channel").getChannelIndex("Pan/Tilt Speed"))
         );
     }
 
     @Test
     void mustReturnCorrectMode() {
         assertAll(
-                () -> assertEquals("9ch", fixture.getMode("9-Channel").shortName()),
-                () -> assertNull(fixture.getMode("11-Channel"))
+                () -> assertEquals("9ch", fixture.getModeByName("9-Channel").shortName()),
+                () -> assertNull(fixture.getModeByName("11-Channel"))
         );
     }
 }

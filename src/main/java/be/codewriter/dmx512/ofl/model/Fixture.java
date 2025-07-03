@@ -18,7 +18,7 @@ public record Fixture(
         LinkedHashMap<String, Channel> availableChannels,
         List<Mode> modes
 ) {
-    public Mode getMode(String name) {
+    public Mode getModeByName(String name) {
         return modes.stream()
                 .filter(mode -> mode.name().equalsIgnoreCase(name))
                 .findFirst()

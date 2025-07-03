@@ -106,36 +106,6 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
         this.port = (protocol == Protocol.ARTNET) ? DEFAULT_ARTNET_PORT : DEFAULT_SACN_PORT;
     }
 
-    private byte[] createArtNetPollPacket() {
-        byte[] packet = new byte[14];
-
-        // Art-Net header
-        packet[0] = 'A';
-        packet[1] = 'r';
-        packet[2] = 't';
-        packet[3] = '-';
-        packet[4] = 'N';
-        packet[5] = 'e';
-        packet[6] = 't';
-        packet[7] = 0;
-
-        // OpCode for ArtPoll (0x2000)
-        packet[8] = 0x00;
-        packet[9] = 0x20;
-
-        // Protocol version
-        packet[10] = 0x00;
-        packet[11] = 0x0e;
-
-        // Poll flags
-        packet[12] = 0x02; // Enable diagnostic messages
-
-        // Priority
-        packet[13] = 0x00;
-
-        return packet;
-    }
-
     private byte[] createSACNPacket(DMXMessage dmxMessage) {
         // sACN packet header (simplified version)
         byte[] packet = new byte[126 + dmxMessage.getLength()];
@@ -247,7 +217,7 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
         var dmxMessage = new DMXMessage(clients);
         byte[] packet;
         if (protocol == Protocol.ARTNET) {
-            packet = createArtNetPacket(dmxMessage);
+            packet = createArtNetDataPacket(dmxMessage);
         } else {
             packet = createSACNPacket(dmxMessage);
         }
@@ -260,8 +230,11 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
                     port
             );
             socket.send(datagramPacket);
-            LOGGER.debug("Sent packet to {}, length: {}",
-                    socket.getRemoteSocketAddress(), datagramPacket.getLength());
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Sent packet to {}, length {}: {}",
+                        socket.getRemoteSocketAddress(), datagramPacket.getLength(),
+                        HexFormat.of().withDelimiter(" ").withUpperCase().formatHex(packet));
+            }
 
             // Update statistics
             packetsSent++;
@@ -323,9 +296,17 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
         listenerThread.start();
     }
 
-    private byte[] createArtNetPacket(DMXMessage dmxMessage) {
+    private byte[] createArtNetPollPacket() {
+        return createArtNetPacket((short) 0x2000, new byte[]{});
+    }
+
+    private byte[] createArtNetDataPacket(DMXMessage dmxMessage) {
+        return createArtNetPacket((short) 0x5000, dmxMessage.getData());
+    }
+
+    private byte[] createArtNetPacket(Short opCode, byte[] dmxData) {
         // Art-Net packet structure
-        int packageLength = dmxMessage.getLength();
+        int packageLength = dmxData.length;
         byte[] packet = new byte[18 + packageLength];
 
         // Art-Net header "Art-Net"
@@ -338,9 +319,9 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
         packet[6] = 't';
         packet[7] = 0;
 
-        // OpCode for ArtDMX (0x5000)
-        packet[8] = 0x00;
-        packet[9] = 0x50;
+        // OpCode for ArtDMX
+        packet[8] = (byte) (opCode & 0xFF);        // Low byte (0x00)
+        packet[9] = (byte) ((opCode >> 8) & 0xFF);
 
         // Protocol version (14)
         packet[10] = 0x00;
@@ -360,8 +341,18 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
         packet[16] = (byte) ((packageLength >> 8) & 0xFF);
         packet[17] = (byte) (packageLength & 0xFF);
 
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Header: {}", HexFormat.of().withDelimiter(" ").withUpperCase().formatHex(packet));
+        }
+
         // Copy DMX data
-        System.arraycopy(dmxMessage.getData(), 0, packet, 18, packageLength);
+        if (dmxData.length > 0) {
+            System.arraycopy(dmxData, 0, packet, 18, packageLength);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("DMX data: {}", HexFormat.of().withDelimiter(" ").withUpperCase().formatHex(dmxData));
+                LOGGER.debug("Full packet: {}", HexFormat.of().withDelimiter(" ").withUpperCase().formatHex(packet));
+            }
+        }
 
         return packet;
     }

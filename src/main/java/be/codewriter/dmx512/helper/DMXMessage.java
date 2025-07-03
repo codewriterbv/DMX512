@@ -14,9 +14,8 @@ public class DMXMessage {
                 .max()
                 .orElse(0);
         data = new byte[length];
-        data[0] = 0; // DMX sta1 code
         for (DMXClient client : clients) {
-            var startIndex = client.getStartChannel();
+            var startIndex = client.getStartChannel() - 1;
             length = client.getDataLength();
             for (var idx = 0; idx < length; idx++) {
                 data[startIndex + idx] = client.getValue(idx);
