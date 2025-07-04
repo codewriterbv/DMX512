@@ -6,7 +6,7 @@
 
     <groupId>be.codewriter</groupId>
     <artifactId>dmx512</artifactId>
-    <version>0.0.1-beta</version>
+    <version>0.0.1-beta-SNAPSHOT</version>
     <url>https://github.com/codewriterbv/dmx512</url>
     <packaging>jar</packaging>
 
