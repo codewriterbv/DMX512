@@ -1,6 +1,9 @@
-package be.codewriter.dmx512.controller;
+package be.codewriter.dmx512.controller.serial;
 
 import be.codewriter.dmx512.client.DMXClient;
+import be.codewriter.dmx512.controller.DMXChangeMessage;
+import be.codewriter.dmx512.controller.DMXChangeNotifier;
+import be.codewriter.dmx512.controller.DMXController;
 import be.codewriter.dmx512.helper.DMXMessage;
 import be.codewriter.dmx512.serial.SerialConnection;
 import com.fazecast.jSerialComm.SerialPort;

@@ -1,9 +1,13 @@
-package be.codewriter.dmx512.controller;
+package be.codewriter.dmx512.controller.ip;
 
 import be.codewriter.dmx512.client.DMXClient;
+import be.codewriter.dmx512.controller.DMXChangeMessage;
+import be.codewriter.dmx512.controller.DMXChangeNotifier;
+import be.codewriter.dmx512.controller.DMXController;
 import be.codewriter.dmx512.helper.DMXMessage;
 import be.codewriter.dmx512.network.DMXIpDevice;
 import be.codewriter.dmx512.network.Protocol;
+import be.codewriter.dmx512.tool.HexTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +31,7 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
     private InetAddress address;
     private int port;
     private boolean connected = false;
-    private int universe = 0;
+    private int universe = 1;
     private Protocol protocol = Protocol.ARTNET;
     // Network statistics
     private String lastError = "";
@@ -51,7 +55,7 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
             }
 
             // Send Art-Net poll packet
-            byte[] pollPacket = createArtNetPollPacket();
+            byte[] pollPacket = createDetectPaket();
             DatagramPacket packet = new DatagramPacket(
                     pollPacket,
                     pollPacket.length,
@@ -99,42 +103,6 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
         this.port = (protocol == Protocol.ARTNET) ? DEFAULT_ARTNET_PORT : DEFAULT_SACN_PORT;
     }
 
-    private byte[] createSACNPacket(DMXMessage dmxMessage) {
-        // sACN packet header (simplified version)
-        byte[] packet = new byte[126 + dmxMessage.getLength()];
-
-        // Root layer
-        packet[0] = 0x00; // Preamble Size
-        packet[1] = 0x10; // Post-amble Size
-
-        // ACN Packet Identifier
-        packet[4] = 0x41;
-        packet[5] = 0x53;
-        packet[6] = 0x43;
-        packet[7] = 0x2d;
-        packet[8] = 0x45;
-        packet[9] = 0x31;
-        packet[10] = 0x2e;
-        packet[11] = 0x17;
-
-        // Flags and Length
-        packet[16] = 0x70; // Vector
-
-        // DMP layer
-        packet[117] = (byte) 0x02; // Vector
-        packet[118] = (byte) 0xa1; // Address Type & Data Type
-        packet[119] = (byte) 0x00; // First Property Address
-        packet[120] = (byte) 0x00; // Address Increment
-        packet[121] = (byte) ((dmxMessage.getLength() + 1) >> 8);
-        packet[122] = (byte) (dmxMessage.getLength() + 1);
-        packet[123] = (byte) 0x00; // DMX Start Code
-
-        // Copy DMX data
-        System.arraycopy(dmxMessage.getData(), 0, packet, 124, dmxMessage.getLength());
-
-        return packet;
-    }
-
     private DMXIpDevice parseArtNetPollReply(DatagramPacket packet) {
         byte[] data = packet.getData();
 
@@ -180,14 +148,7 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
 
         // Create and send packet based on protocol
         var dmxMessage = new DMXMessage(clients);
-        byte[] packet;
-        if (protocol == Protocol.ARTNET) {
-            packet = createArtNetDataPacket(dmxMessage);
-        } else {
-            packet = createSACNPacket(dmxMessage);
-        }
-
-        sendData(packet);
+        sendData(createDataPacket(dmxMessage));
     }
 
     @Override
@@ -203,7 +164,7 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Sent packet to {}, length {}: {}",
                         socket.getRemoteSocketAddress(), datagramPacket.getLength(),
-                        HexFormat.of().withDelimiter(" ").withUpperCase().formatHex(datagramPacket.getData()));
+                        HexTool.toHexString(datagramPacket.getData()));
             }
         } catch (IOException e) {
             lastError = "Send failed: " + e.getMessage();
@@ -260,64 +221,23 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
         listenerThread.start();
     }
 
-    private byte[] createArtNetPollPacket() {
-        return createArtNetPacket((short) 0x2000, new byte[]{});
+    public byte[] createDetectPaket() {
+        if (this.protocol == Protocol.ARTNET) {
+            var builder = new ArtNetPacketBuilder();
+            return builder.createArtPollPacket();
+        } else {
+            var builder = new SACNPacketBuilder("");
+            return builder.createSACNPacket(new byte[]{}, universe);
+        }
     }
 
-    private byte[] createArtNetDataPacket(DMXMessage dmxMessage) {
-        return createArtNetPacket((short) 0x5000, dmxMessage.getData());
-    }
-
-    private byte[] createArtNetPacket(Short opCode, byte[] dmxData) {
-        // Art-Net packet structure
-        int packageLength = dmxData.length;
-        byte[] packet = new byte[18 + packageLength];
-
-        // Art-Net header "Art-Net"
-        packet[0] = 'A';
-        packet[1] = 'r';
-        packet[2] = 't';
-        packet[3] = '-';
-        packet[4] = 'N';
-        packet[5] = 'e';
-        packet[6] = 't';
-        packet[7] = 0;
-
-        // OpCode for ArtDMX
-        packet[8] = (byte) (opCode & 0xFF);        // Low byte (0x00)
-        packet[9] = (byte) ((opCode >> 8) & 0xFF);
-
-        // Protocol version (14)
-        packet[10] = 0x00;
-        packet[11] = 0x0e;
-
-        // Sequence number (0)
-        packet[12] = 0x00;
-
-        // Physical port (0)
-        packet[13] = 0x00;
-
-        // Universe (0)
-        packet[14] = 0x00;
-        packet[15] = 0x00;
-
-        // Length of DMX data
-        packet[16] = (byte) ((packageLength >> 8) & 0xFF);
-        packet[17] = (byte) (packageLength & 0xFF);
-
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Header: {}", HexFormat.of().withDelimiter(" ").withUpperCase().formatHex(packet));
+    public byte[] createDataPacket(DMXMessage dmxMessage) {
+        if (this.protocol == Protocol.ARTNET) {
+            var builder = new ArtNetPacketBuilder();
+            return builder.createArtDMXPacket(dmxMessage.getData(), universe);
+        } else {
+            var builder = new SACNPacketBuilder("");
+            return builder.createSACNPacket(dmxMessage.getData(), universe);
         }
-
-        // Copy DMX data
-        if (dmxData.length > 0) {
-            System.arraycopy(dmxData, 0, packet, 18, packageLength);
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("DMX data: {}", HexFormat.of().withDelimiter(" ").withUpperCase().formatHex(dmxData));
-                LOGGER.debug("Full packet: {}", HexFormat.of().withDelimiter(" ").withUpperCase().formatHex(packet));
-            }
-        }
-
-        return packet;
     }
 }

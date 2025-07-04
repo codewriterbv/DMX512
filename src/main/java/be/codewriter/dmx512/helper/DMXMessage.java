@@ -8,9 +8,17 @@ public class DMXMessage {
 
     private final byte[] data;
 
+    public DMXMessage(byte[] data) {
+        this.data = data;
+    }
+
+    public DMXMessage(DMXClient client) {
+        this(List.of(client));
+    }
+
     public DMXMessage(List<DMXClient> clients) {
         var length = clients.stream()
-                .mapToInt(client -> client.getAddress() + client.getDataLength())
+                .mapToInt(client -> client.getAddress() + client.getDataLength() - 1)
                 .max()
                 .orElse(0);
         data = new byte[length];

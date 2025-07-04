@@ -1,6 +1,7 @@
 package be.codewriter.dmx512.helper;
 
 import be.codewriter.dmx512.MotherObjects;
+import be.codewriter.dmx512.tool.HexTool;
 import org.junit.jupiter.api.Test;
 
 import java.util.HexFormat;
@@ -24,7 +25,8 @@ class DMXMessageTest {
         var client2Offset = client2.getAddress() - 1;
 
         assertAll(
-                () -> assertEquals(19, data.length, "Data length"),
+                () -> assertEquals(18, data.length, "Data length"),
+                () -> assertEquals("01 02 03 04 05 00 00 00 00 11 22 33 44 55 66 77 88 99", HexTool.toHexString(data), "Data content"),
 
                 // Client 1
 
