@@ -10,6 +10,8 @@ public interface DMXController {
 
     void render(List<DMXClient> clients);
 
+    void sendData(byte[] data);
+
     void close();
 
     boolean isConnected();

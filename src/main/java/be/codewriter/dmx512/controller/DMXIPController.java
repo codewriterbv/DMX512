@@ -20,9 +20,6 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
 
     private static final int DEFAULT_ARTNET_PORT = 6454;
     private static final int DEFAULT_SACN_PORT = 5568;
-    private static final long MIN_PACKET_INTERVAL = 25; // 40fps max
-    private static final int RATE_LIMIT_WINDOW = 1000; // 1 second
-    private static final int MAX_PACKETS_PER_SECOND = 44; // Art-Net recommended
     // Rate limiting
     private final Queue<Long> packetTimes = new LinkedList<>();
     private final boolean listening = true;
@@ -33,10 +30,6 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
     private int universe = 0;
     private Protocol protocol = Protocol.ARTNET;
     // Network statistics
-    private long packetsSent = 0;
-    private long packetsDropped = 0;
-    private long lastPacketTime = 0;
-    private double bandwidth = 0;
     private String lastError = "";
     private Thread listenerThread;
 
@@ -160,15 +153,6 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
         return new DMXIpDevice(ipAddress, Protocol.ARTNET, name, universeCount);
     }
 
-    private double calculateBandwidth(int packetSize) {
-        long currentTime = System.currentTimeMillis();
-        double timeDiff = (currentTime - lastPacketTime) / 1000.0; // Convert to seconds
-        if (timeDiff > 0) {
-            return (packetSize * 8) / timeDiff; // bits per second
-        }
-        return 0;
-    }
-
     @Override
     public boolean connect(String ipAddress) {
         LOGGER.debug("Connecting to DMX network at {}", ipAddress);
@@ -194,25 +178,6 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
             return;
         }
 
-        // Check rate limiting
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastPacketTime < MIN_PACKET_INTERVAL) {
-            packetsDropped++;
-            return;
-        }
-
-        // Remove old packet times
-        while (!packetTimes.isEmpty() &&
-                packetTimes.peek() < currentTime - RATE_LIMIT_WINDOW) {
-            packetTimes.poll();
-        }
-
-        // Check if we're within rate limit
-        if (packetTimes.size() >= MAX_PACKETS_PER_SECOND) {
-            packetsDropped++;
-            return;
-        }
-
         // Create and send packet based on protocol
         var dmxMessage = new DMXMessage(clients);
         byte[] packet;
@@ -222,10 +187,15 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
             packet = createSACNPacket(dmxMessage);
         }
 
+        sendData(packet);
+    }
+
+    @Override
+    public void sendData(byte[] data) {
         try {
             DatagramPacket datagramPacket = new DatagramPacket(
-                    packet,
-                    packet.length,
+                    data,
+                    data.length,
                     address,
                     port
             );
@@ -233,14 +203,8 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Sent packet to {}, length {}: {}",
                         socket.getRemoteSocketAddress(), datagramPacket.getLength(),
-                        HexFormat.of().withDelimiter(" ").withUpperCase().formatHex(packet));
+                        HexFormat.of().withDelimiter(" ").withUpperCase().formatHex(datagramPacket.getData()));
             }
-
-            // Update statistics
-            packetsSent++;
-            lastPacketTime = currentTime;
-            packetTimes.offer(currentTime);
-            bandwidth = calculateBandwidth(packet.length);
         } catch (IOException e) {
             lastError = "Send failed: " + e.getMessage();
             LOGGER.error(lastError);

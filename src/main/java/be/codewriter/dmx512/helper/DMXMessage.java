@@ -10,12 +10,12 @@ public class DMXMessage {
 
     public DMXMessage(List<DMXClient> clients) {
         var length = clients.stream()
-                .mapToInt(client -> client.getStartChannel() + client.getDataLength())
+                .mapToInt(client -> client.getAddress() + client.getDataLength())
                 .max()
                 .orElse(0);
         data = new byte[length];
         for (DMXClient client : clients) {
-            var startIndex = client.getStartChannel() - 1;
+            var startIndex = client.getAddress() - 1;
             length = client.getDataLength();
             for (var idx = 0; idx < length; idx++) {
                 data[startIndex + idx] = client.getValue(idx);

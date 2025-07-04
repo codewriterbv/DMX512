@@ -9,7 +9,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HexFormat;
+import java.util.List;
 
 /**
  * DMX Serial Controller.
@@ -19,16 +22,14 @@ public class DMXSerialController extends DMXChangeNotifier implements DMXControl
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXSerialController.class.getName());
 
     private static final int DMX_UNIVERSE_SIZE = 512;
-    private final List<DMXMessage> messages;
+    private final byte[] universe = new byte[DMX_UNIVERSE_SIZE];
     private SerialPort serialPort;
     private OutputStream outputStream;
     private boolean connected = false;
+    private volatile boolean isRunning = false;
+    private Thread transmitThread;
 
     public DMXSerialController() {
-        this.messages = Collections.synchronizedList(new ArrayList<>());
-
-        // Start message processing thread
-        Thread.startVirtualThread(this::processMessages);
     }
 
     /**
@@ -55,23 +56,24 @@ public class DMXSerialController extends DMXChangeNotifier implements DMXControl
 
         // Configure and open the port
         serialPort.setComPortParameters(
-                250000,                  // Baud rate (DMX uses 250k)
-                8,                       // Data bits
+                250_000,     // Baud rate (DMX uses 250k)
+                8,                      // Data bits
                 SerialPort.TWO_STOP_BITS,
                 SerialPort.NO_PARITY
         );
 
         // Set timeouts
         serialPort.setComPortTimeouts(
-                SerialPort.TIMEOUT_WRITE_BLOCKING,
-                0,
-                2000
+                SerialPort.TIMEOUT_READ_SEMI_BLOCKING,
+                100,
+                0
         );
 
         if (serialPort.openPort()) {
             outputStream = serialPort.getOutputStream();
             connected = true;
             notifyListeners(DMXChangeMessage.CONNECTED);
+            sendData();
             return true;
         } else {
             LOGGER.error("Failed to open port: {}", portName);
@@ -87,6 +89,7 @@ public class DMXSerialController extends DMXChangeNotifier implements DMXControl
     @Override
     public synchronized void render(List<DMXClient> clients) {
         var dmxMessage = new DMXMessage(clients);
+
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("DMX message: {}", HexFormat.of().formatHex(dmxMessage.getData()));
         }
@@ -96,44 +99,16 @@ public class DMXSerialController extends DMXChangeNotifier implements DMXControl
             return;
         }
 
-        synchronized (messages) {
-            messages.add(dmxMessage);
-            messages.notify(); // Notify the processing thread that new data is available
-        }
+        System.arraycopy(dmxMessage.getData(), 0, universe, 0, dmxMessage.getData().length);
     }
 
     /**
-     * Continuous processing of the message list.
+     * Send the given raw data to the DMX interface.
      */
-    private void processMessages() {
-        while (!Thread.currentThread().isInterrupted()) {
-            DMXMessage message = null;
-
-            synchronized (messages) {
-                while (messages.isEmpty()) {
-                    try {
-                        messages.wait();
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        return;
-                    }
-                }
-
-                message = messages.remove(0);
-            }
-
-            if (message != null) {
-                sendMessage(message);
-            }
-        }
-    }
-
-    /**
-     * Send the given DMX message to the DMX interface.
-     */
-    private void sendMessage(DMXMessage message) {
+    @Override
+    public void sendData(byte[] data) {
         // Send DMX break
-        serialPort.setBreak();
+        /*serialPort.setBreak();
 
         try {
             Thread.sleep(1); // Break duration (1ms)
@@ -150,16 +125,65 @@ public class DMXSerialController extends DMXChangeNotifier implements DMXControl
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return;
-        }
+        }*/
+
 
         // Send DMX data
-        try {
-            outputStream.write(message.getData());
+        /*try {
+            outputStream.write(new byte[]{(byte) 0});
+            Thread.sleep(10);
+
+
+            outputStream.write(new byte[]{(byte) 1});
+            Thread.sleep(10);
+
+            LOGGER.info("Sending DMX data: {}", HexFormat.of().formatHex(data));
+            outputStream.write(data);
             outputStream.flush();
         } catch (Exception e) {
             LOGGER.error("Failed to send DMX data: {}", e.getMessage());
+        }*/
+
+        System.arraycopy(data, 0, universe, 0, data.length);
+    }
+
+    public void sendData() {
+        // Start continuous DMX transmission in background
+        if (transmitThread == null || !transmitThread.isAlive()) {
+            isRunning = true;
+            transmitThread = new Thread(this::transmitDMXLoop);
+            transmitThread.setDaemon(true);
+            transmitThread.start();
         }
     }
+
+    private void transmitDMXLoop() {
+        while (isRunning && serialPort.isOpen()) {
+            try {
+                // Send DMX break (0.0V) for at least 88 microseconds
+                serialPort.setBreak();
+                Thread.sleep(1); // 1ms is plenty for a break
+
+                // Send DMX mark after break (1.0V) for at least 8 microseconds
+                serialPort.clearBreak();
+                Thread.sleep(1); // 1ms is plenty for mark after break
+
+                // Start code (0) + DMX data
+                serialPort.getOutputStream().write(0); // Start code
+                serialPort.getOutputStream().write(universe);
+                serialPort.getOutputStream().flush();
+
+                LOGGER.info("Sending DMX data: {}", HexFormat.of().formatHex(universe));
+
+                // DMX refresh rate (typically 40Hz)
+                Thread.sleep(25); // 25ms = 40Hz
+            } catch (Exception e) {
+                isRunning = false;
+                e.printStackTrace();
+            }
+        }
+    }
+
 
     /**
      * Close the connection to the DMX interface

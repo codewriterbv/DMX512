@@ -59,7 +59,7 @@ public class Main {
             // Connect to the DMX interface
             // On Windows, use something like "COM3"
             // On Linux, use something like "/dev/ttyUSB0"
-            if (controller.connect("/dev/ttyUSB0")) {
+            if (controller.connect("tty.usbserial-B003X1DH")) {
                 LOGGER.info("Connected to DMX interface");
 
                 return controller;

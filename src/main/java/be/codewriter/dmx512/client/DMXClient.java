@@ -10,16 +10,16 @@ public class DMXClient {
 
     private final Fixture fixture;
     private final Mode selectedMode;
-    private final int startChannel;
+    private final int address;
     private final byte[] values;
 
-    public DMXClient(Fixture fixture, Mode selectedMode, int startChannel) {
-        if (startChannel < 0 || startChannel > 255) {
-            throw new IllegalArgumentException("Value must be between 0 and 255");
+    public DMXClient(Fixture fixture, Mode selectedMode, int address) {
+        if (address < 1 || address > 255) {
+            throw new IllegalArgumentException("Invalid address: " + address);
         }
         this.fixture = fixture;
         this.selectedMode = selectedMode;
-        this.startChannel = startChannel;
+        this.address = address;
         this.values = new byte[selectedMode.channels().size()];
     }
 
@@ -31,8 +31,8 @@ public class DMXClient {
         return selectedMode;
     }
 
-    public int getStartChannel() {
-        return startChannel;
+    public int getAddress() {
+        return address;
     }
 
     public boolean hasChannel(String key) {
