@@ -18,13 +18,13 @@ public class Main {
 
     public static void main(String[] args) {
         var ipController = setupIpControllers();
-        //runDemoPartySpot(ipController);
+        runDemoPartySpot(ipController);
         runDemoPicoSpotMovingHead(ipController);
         ipController.close();
 
         //var serialController = setupSerialController();
-        //runDemoPartySpot(ipController);
         //runDemoPartySpot(serialController);
+        //runDemoPicoSpotMovingHead(serialController);
         //serialController.close();
     }
 
@@ -61,7 +61,6 @@ public class Main {
             // On Linux, use something like "/dev/ttyUSB0"
             if (controller.connect("tty.usbserial-B003X1DH")) {
                 LOGGER.info("Connected to DMX interface");
-
                 return controller;
             } else {
                 LOGGER.error("Failed to connect to DMX interface");
@@ -94,7 +93,7 @@ public class Main {
 
             // Create some fixtures
             var fixture = getFixturePartySpot();
-            DMXClient rgb = new DMXClient(fixture, fixture.modes().getFirst(), 1);
+            DMXClient rgb = new DMXClient(fixture, fixture.modes().getFirst(), 23);
             clients.add(rgb);
 
             // Set dimmer full
@@ -198,6 +197,7 @@ public class Main {
             client.setValue("color wheel", (byte) 0);
             client.setValue("gobo wheel", (byte) 0);
             client.setValue("dimmer", (byte) 255);
+            client.setValue("program", (byte) 0);
             controller.render(clients);
             Thread.sleep(3000);
 
