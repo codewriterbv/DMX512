@@ -3,7 +3,9 @@ package be.codewriter.dmx512.controller;
 import be.codewriter.dmx512.MotherObjects;
 import be.codewriter.dmx512.controller.ip.DMXIPController;
 import be.codewriter.dmx512.helper.DMXMessage;
+import be.codewriter.dmx512.network.Protocol;
 import be.codewriter.dmx512.tool.HexTool;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -46,8 +48,7 @@ class DMXIPControllerTest {
         assertEquals("41 72 74 2D 4E 65 74 00 00 50 00 0E 00 00 01 00 00 04 01 02 03 00", HexTool.toHexString(poll), "Art-Net Data from bytes");
     }
 
-    /*
-    @Test
+    @Disabled("SACN is todo...")
     void shouldHaveValidSACNDataFromBytes() {
         DMXMessage message = new DMXMessage(new byte[]{(byte) 0x01, (byte) 0x02, (byte) 0x03});
         DMXIPController controller = new DMXIPController();
@@ -56,5 +57,4 @@ class DMXIPControllerTest {
         var poll = controller.createDataPacket(message);
         assertEquals("41 72 74 2D 4E 65 74 00 00 50 00 0E 00 00 00 00 00 03 01 02 03", HexTool.toHexString(poll), "Art-Net Data from bytes");
     }
-    */
 }

@@ -4,7 +4,6 @@ import be.codewriter.dmx512.MotherObjects;
 import be.codewriter.dmx512.tool.HexTool;
 import org.junit.jupiter.api.Test;
 
-import java.util.HexFormat;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -19,7 +18,6 @@ class DMXMessageTest {
 
         var dmxMessage = new DMXMessage(List.of(client1, client2));
         var data = dmxMessage.getData();
-        System.out.printf("Data: " + HexFormat.of().formatHex(data));
 
         var client1Offset = client1.getAddress() - 1;
         var client2Offset = client2.getAddress() - 1;

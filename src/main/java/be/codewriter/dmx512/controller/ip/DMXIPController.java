@@ -45,7 +45,7 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
     }
 
     public List<DMXIpDevice> discoverDevices() {
-        List<DMXIpDevice> DMXIpDevices = new ArrayList<>();
+        List<DMXIpDevice> dmxIpDevices = new ArrayList<>();
         Set<InetAddress> localAddresses = new HashSet<>();
 
         try {
@@ -84,7 +84,7 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
 
                         DMXIpDevice DMXIpDevice = parseArtNetPollReply(receivePacket);
                         if (DMXIpDevice != null) {
-                            DMXIpDevices.add(DMXIpDevice);
+                            dmxIpDevices.add(DMXIpDevice);
                         }
                     } catch (SocketTimeoutException e) {
                         break;
@@ -95,7 +95,7 @@ public class DMXIPController extends DMXChangeNotifier implements DMXController 
             lastError = "Discovery failed: " + e.getMessage();
         }
 
-        return DMXIpDevices;
+        return dmxIpDevices;
     }
 
     public void setProtocol(Protocol protocol) {

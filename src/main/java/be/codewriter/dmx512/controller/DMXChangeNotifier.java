@@ -14,11 +14,11 @@ public class DMXChangeNotifier {
         listeners.remove(listener);
     }
 
-    protected void notifyListeners(DMXChangeMessage DMXChangeMessage) {
-        notifyListeners(DMXChangeMessage, "");
+    protected void notifyListeners(DMXChangeMessage dmxChangeMessage) {
+        notifyListeners(dmxChangeMessage, "");
     }
 
-    protected void notifyListeners(DMXChangeMessage DMXChangeMessage, String value) {
-        listeners.forEach(l -> l.notify(DMXChangeMessage, value));
+    protected void notifyListeners(DMXChangeMessage dmxChangeMessage, String value) {
+        listeners.forEach(l -> l.notify(dmxChangeMessage, value));
     }
 }

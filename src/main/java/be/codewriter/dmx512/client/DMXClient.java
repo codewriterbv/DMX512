@@ -13,6 +13,16 @@ public class DMXClient {
     private final int address;
     private final byte[] values;
 
+    public DMXClient(int numberOfChannels, int address) {
+        if (address < 1 || address > 255) {
+            throw new IllegalArgumentException("Invalid address: " + address);
+        }
+        this.fixture = null;
+        this.selectedMode = null;
+        this.address = address;
+        this.values = new byte[numberOfChannels];
+    }
+
     public DMXClient(Fixture fixture, Mode selectedMode, int address) {
         if (address < 1 || address > 255) {
             throw new IllegalArgumentException("Invalid address: " + address);
@@ -36,6 +46,10 @@ public class DMXClient {
     }
 
     public boolean hasChannel(String key) {
+        if (selectedMode == null) {
+            LOGGER.error("No mode defined, no channels defined by name");
+            return false;
+        }
         return selectedMode.getChannelIndex(key) >= 0;
     }
 
@@ -44,6 +58,10 @@ public class DMXClient {
     }
 
     public void setValue(String key, byte value) {
+        if (selectedMode == null) {
+            LOGGER.error("No mode defined, can't set the value");
+            return;
+        }
         var idx = selectedMode.getChannelIndex(key);
         if (idx == -1) {
             LOGGER.error("Can't find the channel index for key '{}'", key);
@@ -57,6 +75,10 @@ public class DMXClient {
     }
 
     public byte getValue(String key) {
+        if (selectedMode == null) {
+            LOGGER.error("No mode defined, returning value 0");
+            return 0;
+        }
         var idx = selectedMode.getChannelIndex(key);
         if (idx == -1) {
             LOGGER.error("Can't find the channel index for key '{}', will return value 0", key);

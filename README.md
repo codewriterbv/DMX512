@@ -16,6 +16,8 @@ Uses the [Open Fixture Library (OFL)](https://open-fixture-library.org/) to crea
 
 ## Sample use
 
+### Using Fixtures and Modes
+
 For an easy example, see the code in this repository in [`be.codewriter.dmx512.Main`](src/main/java/be/codewriter/dmx512/Main.java). This is a simplified version:
 
 ```java

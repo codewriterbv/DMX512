@@ -300,27 +300,3 @@ public class ArtNetPacketBuilder {
         this.enableSequencing = enabled;
     }
 }
-
-// Usage example:
-/*
-public class ArtNetExample {
-    public static void main(String[] args) {
-        ArtNetPacketBuilder builder = new ArtNetPacketBuilder();
-
-        // Create DMX data (example: first 4 channels)
-        byte[] dmxData = {(byte) 255, (byte) 128, (byte) 64, (byte) 32};
-
-        // Create ArtDMX packet for universe 0
-        byte[] dmxPacket = builder.createArtDMXPacket(dmxData, 0);
-
-        // Create ArtPoll packet
-        byte[] pollPacket = builder.createArtPollPacket();
-
-        // Create ArtSync packet
-        byte[] syncPacket = builder.createArtSyncPacket();
-
-        // Send packets via UDP broadcast to 255.255.255.255:6454
-        // (network code not shown)
-    }
-}
-*/

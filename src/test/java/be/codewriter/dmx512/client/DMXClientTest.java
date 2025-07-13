@@ -1,15 +1,8 @@
 package be.codewriter.dmx512.client;
 
 import be.codewriter.dmx512.MotherObjects;
-import be.codewriter.dmx512.helper.DMXMessage;
-import be.codewriter.dmx512.ofl.model.Channel;
-import be.codewriter.dmx512.ofl.model.Fixture;
-import be.codewriter.dmx512.ofl.model.Mode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
-import java.util.LinkedHashMap;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -15,6 +15,10 @@ public class OpenFormatLibraryParser {
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .build();
 
+    private OpenFormatLibraryParser() {
+        // Hide constructor
+    }
+
     /**
      * Parse a fixture from a JSON file
      */

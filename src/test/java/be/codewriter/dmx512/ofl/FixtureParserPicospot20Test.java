@@ -17,7 +17,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 class FixtureParserPicospot20Test {
     private static final String TEST_FIXTURE_PATH = "ofl/fun-generation/picospot-20-led.json";
-    private OpenFormatLibraryParser parser;
     private Fixture fixture;
 
     @BeforeEach

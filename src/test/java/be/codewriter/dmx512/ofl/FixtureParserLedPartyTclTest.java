@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * https://open-fixture-library.org/eurolite/led-party-tcl-spot
  */
-public class FixtureParserLedPartyTclTest {
+class FixtureParserLedPartyTclTest {
     private static final String TEST_FIXTURE_PATH = "ofl/eurolite/led-party-tcl-spot.json";
     private Fixture fixture;
 
@@ -100,24 +100,6 @@ public class FixtureParserLedPartyTclTest {
                 .usingRecursiveComparison()
                 .isEqualTo(fixture);
     }
-
-    /*
-    @Test
-    void shouldParseChannelCapabilities() {
-        assertThat(fixture.availableChannels())
-                .hasValueSatisfying((Channel channel) -> {
-                    if (channel.capabilities() != null) {
-                        assertThat(channel.capabilities())
-                                .allSatisfy(capability -> {
-                                    assertThat(capability.type()).isNotEmpty();
-                                    if (capability.dmxRange() != null) {
-                                        assertThat(capability.dmxRange()).hasSize(2);
-                                    }
-                                });
-                    }
-                });
-    }
-    */
 
     @Test
     void shouldParseFromJsonString() throws IOException {
