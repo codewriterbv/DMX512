@@ -151,7 +151,7 @@
                         </project>
                         <release>
                             <github>
-                                <owner>duke</owner>
+                                <owner>codewriterbv</owner>
                                 <overwrite>true</overwrite>
                             </github>
                         </release>
