@@ -11,6 +11,10 @@ public interface DMXController {
 
     List<DMXChangeListener> listeners = new ArrayList<>();
 
+    DMXType getType();
+
+    String getAddress();
+
     boolean connect();
 
     void render(List<DMXClient> clients);
@@ -35,6 +39,11 @@ public interface DMXController {
 
     default void notifyListeners(DMXChangeMessage dmxChangeMessage, String value) {
         listeners.forEach(l -> l.notify(dmxChangeMessage, value));
+    }
+
+    enum DMXType {
+        IP,
+        SERIAL
     }
 }
 

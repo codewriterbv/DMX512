@@ -35,6 +35,16 @@ public class DMXSerialController implements DMXController {
         connect();
     }
 
+    @Override
+    public DMXType getType() {
+        return DMXType.SERIAL;
+    }
+
+    @Override
+    public String getAddress() {
+        return portName;
+    }
+
     /**
      * Connect to the USB-DMX interface
      *

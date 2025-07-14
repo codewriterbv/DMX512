@@ -61,6 +61,16 @@ public class DMXIPController implements DMXController {
     }
 
     @Override
+    public DMXType getType() {
+        return DMXType.IP;
+    }
+
+    @Override
+    public String getAddress() {
+        return address.getHostName();
+    }
+
+    @Override
     public boolean connect() {
         LOGGER.debug("Connecting to DMX network at {}", address);
         try {
