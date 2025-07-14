@@ -8,6 +8,7 @@
     <artifactId>dmx512</artifactId>
     <version>0.0.1</version>
     <url>https://github.com/codewriterbv/dmx512</url>
+    <name>DMX512</name>
     <description>Java library for the DMX512 protocol and Open Fixture Library</description>
     <packaging>jar</packaging>
 

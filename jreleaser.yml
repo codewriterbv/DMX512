@@ -1,8 +1,6 @@
 project:
-  name: app
-  version: 1.0.0-SNAPSHOT
   description: DMX512 Java Library
-  longDescription: Java library to interact with DMX512 devices
+  longDescription: Java library for the DMX512 protocol and Open Fixture Library
   authors:
     - CodeWriter bv
     - Frank Delporte
