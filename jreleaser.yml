@@ -3,6 +3,7 @@ project:
   name: DMX512
   description: DMX512 Java Library
   longDescription: Java library for the DMX512 protocol and Open Fixture Library
+  copyright: 2025, CodeWriter bv
   authors:
     - CodeWriter bv
     - Frank Delporte
