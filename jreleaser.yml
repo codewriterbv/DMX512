@@ -1,16 +1,19 @@
+# Generated with JReleaser 1.19.0 at 2025-07-14T17:21:03.95667+02:00
 project:
+  name: DMX512
   description: DMX512 Java Library
-  copyright: CodeWriter bv
   longDescription: Java library for the DMX512 protocol and Open Fixture Library
   authors:
     - CodeWriter bv
     - Frank Delporte
   license: GPL-2.0-license
-  java:
-    groupId: be.codewriter
-    version: 21
-  extraProperties:
-    inceptionYear: 2025
+  links:
+    homepage: https://acme.com/app
+  languages:
+    java:
+      groupId: be.codewriter.dmx512
+      version: 21
+  inceptionYear: 2025
 
 release:
   github:

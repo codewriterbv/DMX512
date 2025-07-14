@@ -147,6 +147,7 @@
                         <project>
                             <java>
                                 <mainClass>${app.main.class}</mainClass>
+                                <copyright>2025, CodeWriter bv</copyright>
                             </java>
                         </project>
                         <release>
