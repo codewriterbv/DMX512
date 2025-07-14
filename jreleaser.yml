@@ -1,5 +1,6 @@
 project:
   description: DMX512 Java Library
+  copyright: CodeWriter bv
   longDescription: Java library for the DMX512 protocol and Open Fixture Library
   authors:
     - CodeWriter bv

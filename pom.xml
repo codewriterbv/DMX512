@@ -13,10 +13,12 @@
     <packaging>jar</packaging>
 
     <properties>
+        <app.main.class>be.codewriter.dmx512.Main</app.main.class>
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
+        <app.distribution.directory>${project.build.directory}/distributions/app</app.distribution.directory>
 
         <!-- Dependencies -->
         <jackson.version>2.15.2</jackson.version>
@@ -28,7 +30,7 @@
         <junit.version>5.10.2</junit.version>
 
         <!-- Plugins -->
-        <jreleaser.version>1.13.1</jreleaser.version>
+        <jreleaser.version>1.19.0</jreleaser.version>
         <jsonassert.version>1.5.0</jsonassert.version>
         <maven.source.version>3.2.1</maven.source.version>
         <maven.surfire.version>2.22.2</maven.surfire.version>
@@ -143,28 +145,32 @@
                 <configuration>
                     <jreleaser>
                         <project>
-                            <copyright>https://github.com/codewriterbv/dmx512/</copyright>
+                            <java>
+                                <mainClass>${app.main.class}</mainClass>
+                            </java>
                         </project>
                         <release>
                             <github>
-                                <enabled>false</enabled>
+                                <owner>duke</owner>
+                                <overwrite>true</overwrite>
                             </github>
                         </release>
-                        <signing>
-                            <active>ALWAYS</active>
-                            <armored>true</armored>
-                        </signing>
-                        <deploy>
-                            <maven>
-                                <mavenCentral>
-                                    <sonatype>
-                                        <active>ALWAYS</active>
-                                        <url>https://central.sonatype.com/api/v1/publisher</url>
-                                        <stagingRepositories>target/staging-deploy</stagingRepositories>
-                                    </sonatype>
-                                </mavenCentral>
-                            </maven>
-                        </deploy>
+                        <distributions>
+                            <app>
+                                <artifacts>
+                                    <artifact>
+                                        <path>
+                                            ${app.distribution.directory}/${project.artifactId}-${project.version}.zip
+                                        </path>
+                                    </artifact>
+                                    <artifact>
+                                        <path>
+                                            ${app.distribution.directory}/${project.artifactId}-${project.version}.tar.gz
+                                        </path>
+                                    </artifact>
+                                </artifacts>
+                            </app>
+                        </distributions>
                     </jreleaser>
                 </configuration>
             </plugin>
