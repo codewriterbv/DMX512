@@ -32,12 +32,6 @@
         <junit.version>5.10.2</junit.version>
 
         <!-- Plugins -->
-        <plugin.appassembler.maven.version>2.1.0</plugin.appassembler.maven.version>
-        <plugin.exec.maven.version>3.5.0</plugin.exec.maven.version>
-        <plugin.jreleaser.maven.version>1.19.0</plugin.jreleaser.maven.version>
-        <plugin.maven.assembly.version>3.7.1</plugin.maven.assembly.version>
-        <plugin.maven.compiler.version>3.13.0</plugin.maven.compiler.version>
-        <plugin.maven.jar.version>3.4.2</plugin.maven.jar.version>
     </properties>
 
     <licenses>
@@ -97,123 +91,115 @@
         </dependency>
     </dependencies>
 
+    <scm>
+        <connection>scm:git:https://github.com/codewriterbv/DMX512.git</connection>
+        <developerConnection>scm:git:https://github.com/codewriterbv/DMX512.git</developerConnection>
+        <url>https://github.com/codewriterbv/DMX512.git</url>
+        <tag>HEAD</tag>
+    </scm>
+
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>3.1.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.6.3</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.3.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.jreleaser</groupId>
+                    <artifactId>jreleaser-maven-plugin</artifactId>
+                    <version>1.19.0</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
         <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>${plugin.exec.maven.version}</version>
-                <configuration>
-                    <mainClass>${app.main.class}</mainClass>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${plugin.maven.compiler.version}</version>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>${plugin.maven.jar.version}</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>${app.main.class}</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>appassembler-maven-plugin</artifactId>
-                <version>${plugin.appassembler.maven.version}</version>
-                <configuration>
-                    <assembleDirectory>${project.build.directory}/binary</assembleDirectory>
-                    <repositoryLayout>flat</repositoryLayout>
-                    <repositoryName>lib</repositoryName>
-                    <programs>
-                        <program>
-                            <mainClass>${app.main.class}</mainClass>
-                            <id>app</id>
-                        </program>
-                    </programs>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-distribution</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>assemble</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>${plugin.maven.assembly.version}</version>
-                <configuration>
-                    <attach>false</attach>
-                    <appendAssemblyId>false</appendAssemblyId>
-                    <descriptors>
-                        <descriptor>src/main/assembly/assembly.xml</descriptor>
-                    </descriptors>
-                    <outputDirectory>${app.distribution.directory}</outputDirectory>
-                    <workDirectory>${project.build.directory}/assembly/work</workDirectory>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-distribution</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
             <plugin>
                 <groupId>org.jreleaser</groupId>
                 <artifactId>jreleaser-maven-plugin</artifactId>
-                <version>${plugin.jreleaser.maven.version}</version>
-                <inherited>false</inherited>
                 <configuration>
                     <jreleaser>
-                        <project>
-                            <java>
-                                <mainClass>${app.main.class}</mainClass>
-                            </java>
-                        </project>
-                        <release>
-                            <github>
-                                <owner>duke</owner>
-                                <overwrite>true</overwrite>
-                            </github>
-                        </release>
-                        <distributions>
-                            <app>
-                                <artifacts>
-                                    <artifact>
-                                        <path>
-                                            ${app.distribution.directory}/${project.artifactId}-${project.version}.zip
-                                        </path>
-                                    </artifact>
-                                    <artifact>
-                                        <path>
-                                            ${app.distribution.directory}/${project.artifactId}-${project.version}.tar.gz
-                                        </path>
-                                    </artifact>
-                                </artifacts>
-                            </app>
-                        </distributions>
+                        <signing>
+                            <active>ALWAYS</active>
+                            <armored>true</armored>
+                        </signing>
+                        <deploy>
+                            <maven>
+                                <mavenCentral>
+                                    <sonatype>
+                                        <active>ALWAYS</active>
+                                        <url>https://central.sonatype.com/api/v1/publisher</url>
+                                        <stagingRepositories>target/staging-deploy</stagingRepositories>
+                                    </sonatype>
+                                </mavenCentral>
+                            </maven>
+                        </deploy>
                     </jreleaser>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>publication</id>
+
+            <properties>
+                <altDeploymentRepository>local::file:./target/staging-deploy</altDeploymentRepository>
+            </properties>
+
+            <build>
+                <defaultGoal>deploy</defaultGoal>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <attach>true</attach>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <attach>true</attach>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

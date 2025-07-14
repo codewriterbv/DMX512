@@ -35,7 +35,7 @@ jobs:
       # https://jreleaser.org/guide/latest/examples/maven/staging-artifacts.html
       - name: Build for release
         run: |
-          mvn -ntp -B -Ppublication deploy -DaltDeploymentRepository=local::file:./target/staging-deploy
+          mvn -ntp -B -Ppublication deploy 
 
       - name: List files staged for release
         run: |
