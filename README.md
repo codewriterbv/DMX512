@@ -105,7 +105,7 @@ controller.close();
 
 ## Using this Library in your Project
 
-### From Maven Repository
+You can get this library from the Maven repository:
 
 ```xml
 <dependency>
@@ -114,47 +114,6 @@ controller.close();
     <version>${dmx512.version}</version>
 </dependency>
 ```
-
-### From GitHub Repository
-
-A new artifact is created with GitHub Actions and is available from [GitHub Packages on github.com/codewriterbv/DMX512/packages/2453902](https://github.com/codewriterbv/DMX512/packages/2453902)
-
-1. Add dependency to your `pom.xml`:
-    ```xml
-    <dependency>
-        <groupId>be.codewriter</groupId>
-        <artifactId>dmx512</artifactId>
-        <version>0.0.1-beta</version>
-    </dependency>
-    ```
-2. Add repository to your `pom.xml`:
-    ```xml
-    <repositories>
-        <repository>
-            <id>github</id>
-            <name>GitHub Maven Packages</name>
-            <url>https://maven.pkg.github.com/codewriterbv/DMX512</url>
-            <!-- Add the following only if you want to use snapshot versions -->
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-    ```
-3. The GitHub repository requires credentials to get packages as [described here](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry#authenticating-to-github-packages). Add a GitHub token to your `settings.xml` in the `.m2` directory:
-    ```xml
-    <settings>
-      ...
-      <servers>
-        ...
-        <server>
-            <id>github</id>
-            <username>YOUR_USER_NAME</username>
-            <password>YOUR_TOKEN</password>
-        </server>
-      </servers>
-    </settings>
-    ```
 
 ## About
 
