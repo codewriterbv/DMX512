@@ -27,7 +27,6 @@ import static be.codewriter.dmx512.controller.ip.SACNPacketBuilder.SACN_PORT;
 public class DMXIPController implements DMXController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXIPController.class.getName());
 
-    // Rate limiting
     private final InetAddress address;
     private final Protocol protocol;
     private final int port;
@@ -35,6 +34,10 @@ public class DMXIPController implements DMXController {
     private boolean listening = true;
     private DatagramSocket socket;
     private boolean connected = false;
+    private volatile boolean autoReconnect = true;
+    private long reconnectDelayMs = 5000; // 5 seconds
+    private int maxReconnectAttempts = 10;
+    private int reconnectAttempts = 0;
 
     public DMXIPController(InetAddress address) {
         this(address, Protocol.ARTNET, ART_NET_PORT, 1);
@@ -87,19 +90,45 @@ public class DMXIPController implements DMXController {
     }
 
     @Override
+    public synchronized void render(DMXClient client) {
+        render(List.of(client));
+    }
+
+    @Override
     public synchronized void render(List<DMXClient> clients) {
         if (!connected || socket == null) {
             LOGGER.error("Not connected to DMX network, can't render data to the devices");
             return;
         }
-
-        // Create and send packet based on protocol
-        var dmxMessage = new DMXMessage(clients);
-        sendData(createDataPacket(dmxMessage));
+        render((new DMXMessage(clients)).getData());
     }
 
     @Override
-    public void sendData(byte[] data) {
+    public synchronized void render(byte[] data) {
+        if (!connected || socket == null) {
+            LOGGER.error("Not connected to DMX network, can't render data to the devices");
+            return;
+        }
+        sendData(createDataPacket(data));
+    }
+
+    @Override
+    public void close() {
+        autoReconnect = false;
+        listening = false;
+        if (socket != null) {
+            socket.close();
+        }
+        connected = false;
+        notifyListeners(DMXChangeMessage.DISCONNECTED);
+    }
+
+    @Override
+    public boolean isConnected() {
+        return connected;
+    }
+
+    private void sendData(byte[] data) {
         try {
             DatagramPacket datagramPacket = new DatagramPacket(
                     data,
@@ -115,29 +144,73 @@ public class DMXIPController implements DMXController {
             }
         } catch (IOException e) {
             LOGGER.error("Send failed: {}", e.getMessage());
+            handleDisconnection();
         }
     }
 
-    @Override
-    public void close() {
-        if (socket != null) {
-            socket.close();
+    private void handleDisconnection() {
+        if (connected) {
+            connected = false;
+            notifyListeners(DMXChangeMessage.DISCONNECTED);
+
+            if (autoReconnect && reconnectAttempts < maxReconnectAttempts) {
+                LOGGER.info("Attempting to reconnect... (attempt {}/{})", reconnectAttempts + 1, maxReconnectAttempts);
+                scheduleReconnect();
+            } else if (reconnectAttempts >= maxReconnectAttempts) {
+                LOGGER.error("Max reconnection attempts reached. Giving up.");
+            }
         }
-        connected = false;
-        notifyListeners(DMXChangeMessage.DISCONNECTED);
     }
 
-    @Override
-    public boolean isConnected() {
-        return connected;
+    private void scheduleReconnect() {
+        Thread reconnectThread = new Thread(() -> {
+            try {
+                Thread.sleep(reconnectDelayMs);
+                if (attemptReconnect()) {
+                    reconnectAttempts = 0;
+                    LOGGER.info("Successfully reconnected to DMX network");
+                } else {
+                    reconnectAttempts++;
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        scheduleReconnect();
+                    }
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+        reconnectThread.setName("DMX-Reconnect-Thread");
+        reconnectThread.setDaemon(true);
+        reconnectThread.start();
     }
+
+    private boolean attemptReconnect() {
+        try {
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
+
+            this.socket = new DatagramSocket();
+            this.connected = true;
+            this.listening = true;
+
+            notifyListeners(DMXChangeMessage.CONNECTED);
+            startListening();
+
+            return true;
+        } catch (IOException e) {
+            LOGGER.warn("Reconnection attempt failed: {}", e.getMessage());
+            return false;
+        }
+    }
+
 
     private void startListening() {
         var listenerThread = new Thread(() -> {
             byte[] receiveBuffer = new byte[1024]; // Adjust buffer size as needed
             DatagramPacket receivedPacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
 
-            while (listening) {
+            while (listening && connected) {
                 try {
                     socket.receive(receivedPacket); // This blocks until a packet is received
 
@@ -153,29 +226,47 @@ public class DMXIPController implements DMXController {
                         LOGGER.trace("Received data: {}", Arrays.toString(data));
                     }
                 } catch (SocketTimeoutException e) {
-                    // Timeout is normal, continue listening
-                    continue;
+                    LOGGER.warn("Socket timeout: {}", e.getMessage());
                 } catch (IOException e) {
-                    if (listening) { // Only log if we're still supposed to be listening
+                    if (listening && connected) {
                         LOGGER.error("Error receiving packet: {}", e.getMessage());
-                        listening = false;
-                        notifyListeners(DMXChangeMessage.DISCONNECTED);
+                        handleDisconnection();
                     }
                     break;
+                } catch (Exception e) {
+                    LOGGER.error("Unexpected error: {}", e.getMessage());
                 }
             }
         });
         listenerThread.setName("DMX-UDP-Listener");
+        listenerThread.setDaemon(true);
         listenerThread.start();
     }
 
     public byte[] createDataPacket(DMXMessage dmxMessage) {
+        return createDataPacket(dmxMessage.getData());
+    }
+
+    public byte[] createDataPacket(byte[] data) {
         if (this.protocol == Protocol.ARTNET) {
             var builder = new ArtNetPacketBuilder();
-            return builder.createArtDMXPacket(dmxMessage.getData(), universe);
+            return builder.createArtDMXPacket(data, universe);
         } else {
             var builder = new SACNPacketBuilder("");
-            return builder.createSACNPacket(dmxMessage.getData(), universe);
+            return builder.createSACNPacket(data, universe);
         }
     }
+
+    public void setAutoReconnect(boolean autoReconnect) {
+        this.autoReconnect = autoReconnect;
+    }
+
+    public void setReconnectDelay(long delayMs) {
+        this.reconnectDelayMs = delayMs;
+    }
+
+    public void setMaxReconnectAttempts(int maxAttempts) {
+        this.maxReconnectAttempts = maxAttempts;
+    }
+
 }

@@ -95,16 +95,20 @@ public class DMXSerialController implements DMXController {
         }
     }
 
-    /**
-     * Add the current DMX universe data to list of messages to be sent to the DMX interface.
-     * This list will be processed asap in a separate thread.
-     */
+    @Override
+    public synchronized void render(DMXClient client) {
+        render(List.of(client));
+    }
+
     @Override
     public synchronized void render(List<DMXClient> clients) {
-        var dmxMessage = new DMXMessage(clients);
+        render((new DMXMessage(clients)).getData());
+    }
 
+    @Override
+    public synchronized void render(byte[] data) {
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("DMX message: {}", HexFormat.of().formatHex(dmxMessage.getData()));
+            LOGGER.debug("DMX message: {}", HexFormat.of().formatHex(data));
         }
 
         if (!connected || outputStream == null) {
@@ -112,14 +116,43 @@ public class DMXSerialController implements DMXController {
             return;
         }
 
-        System.arraycopy(dmxMessage.getData(), 0, universe, 0, dmxMessage.getData().length);
+        System.arraycopy(data, 0, universe, 0, data.length);
+    }
+
+    /**
+     * Close the connection to the DMX interface
+     */
+    public void close() {
+        if (connected) {
+            try {
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (serialPort != null) {
+                    serialPort.closePort();
+                }
+                connected = false;
+                notifyListeners(DMXChangeMessage.DISCONNECTED);
+            }
+        }
+    }
+
+    /**
+     * Check if the controller is connected
+     *
+     * @return true if connected
+     */
+    public boolean isConnected() {
+        return connected && serialPort != null && serialPort.isOpen();
     }
 
     /**
      * Send the given raw data to the DMX interface.
      */
-    @Override
-    public void sendData(byte[] data) {
+    private void sendData(byte[] data) {
         // Send DMX break
         /*serialPort.setBreak();
 
@@ -158,36 +191,6 @@ public class DMXSerialController implements DMXController {
         }*/
 
         System.arraycopy(data, 0, universe, 0, data.length);
-    }
-
-    /**
-     * Close the connection to the DMX interface
-     */
-    public void close() {
-        if (connected) {
-            try {
-                if (outputStream != null) {
-                    outputStream.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                if (serialPort != null) {
-                    serialPort.closePort();
-                }
-                connected = false;
-                notifyListeners(DMXChangeMessage.DISCONNECTED);
-            }
-        }
-    }
-
-    /**
-     * Check if the controller is connected
-     *
-     * @return true if connected
-     */
-    public boolean isConnected() {
-        return connected && serialPort != null && serialPort.isOpen();
     }
 
     public void sendData() {

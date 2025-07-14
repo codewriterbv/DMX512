@@ -16,67 +16,96 @@ Uses the [Open Fixture Library (OFL)](https://open-fixture-library.org/) to crea
 
 ## Sample use
 
-### Using Fixtures and Modes
+Below you can find some sample implementations based on this library. Check [Main.java](src/main/java/be/codewriter/dmx512/Main.java) for more of these examples. Check the [DMX512-Demo repository](https://github.com/codewriterbv/DMX512-Demo) for an example if you want to create a user interface with JavaFX.
 
-For an easy example, see the code in this repository in [`be.codewriter.dmx512.Main`](src/main/java/be/codewriter/dmx512/Main.java). This is a simplified version:
+### Send Raw Data
+
+You can send a byte array directly via the controller. Create an array with the expected length by your device and fill in the values. 
+
+This is an example for a PicoSpot on channel 1 = the data starts at index 0 of the byte array.
 
 ```java
-DMXSerialController controller = new DMXSerialController();
-List<DMXClient> clients = new ArrayList<>();
+var controller = new DMXIPController(InetAddress.getByName("172.16.1.144"));
 
-// List available ports
-LOGGER.info("Available ports:");
-
-for (var port : controller.getAvailablePorts()) {
-    LOGGER.info("\t{}",port);
-}
-
-// Connect to the DMX interface
-// On Windows, use something like "COM3"
-// On Linux, use something like "/dev/ttyUSB0"
-if (controller.connect("/dev/ttyUSB0")) {
-    LOGGER.info("Connected to DMX interface");
-
-    // Create some fixtures
-    var fixture;
-    
-    try (InputStream is = Main.class.getClassLoader().getResourceAsStream("led-party-tcl-spot.json")) {
-        fixture = OpenFormatLibraryParser.parseFixture(is);
-    } catch (Exception ex) {
-        LOGGER.error("Error parsing fixture: {}",ex.getMessage());
-    }
-
-    // 0 is the DMX address of the fixture
-    DMXClient rgb = new DMXClient(fixture, fixture.modes().getFirst(), 0);
-
-    // Set to full red
-    rgb.setValue("red",(byte) 255);
-
-    // Send the data to the DMX interface
-    controller.render(List.of(rgb));
-
-    // Fade effect example
-    for (int i = 0; i <=100;i++) {      
-        float ratio = i / 100.0f;
-        rgb.setValue("red",(byte) (255*(1-ratio)));
-        rgb.setValue("blue",(byte) (255*ratio));
-        controller.render(List.of(rgb));
-        Thread.sleep(50);
-    }
-    
-    controller.close();
-} else {
-    LOGGER.error("Failed to connect to DMX interface");
-}
+// The PicoSpot on DMX channel 1 expects 11 values
+/*
+"Pan",
+"Tilt",
+"Pan fine",
+"Tilt fine",
+"Pan/Tilt Speed",
+"Color Wheel",
+"Gobo Wheel",
+"Dimmer",
+"Shutter / Strobe",
+"Program",
+"Program Speed"
+*/
+// Set all to 0
+controller.render(new byte[]{(byte) 0, (byte) 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+sleep(2_000);
+// Set pan and tilt to 127
+controller.render(new byte[]{(byte) 127, (byte) 127, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+sleep(2_000);
+// Set color wheel to 44 and dimmer full op
+controller.render(new byte[]{0, 0, 0, 0, 0, (byte) 44, 0, (byte) 255, 0, 0, 0});
 ```
 
-For a more extended example, with a JavaFX user interface, see the [DMX512-Demo repository](https://github.com/codewriterbv/DMX512-Demo).
+### Using Fixtures and Modes
+
+By using a fixture, loaded from an OFL file, it becomes a lot easier to change the data. You can use the name of the channel (e.g. "red", "dimmer", ...) and don't need to know the index of the data in the byte array.
+
+This is a minimal example:
+
+```java
+var controller = new DMXIPController(InetAddress.getByName("172.16.1.144"));
+
+// Load a fixture
+Fixture fixture = OpenFormatLibraryParser
+        .parseFixture(new File("/your/path/to/led-party-tcl-spot.json"));
+
+// Create a DMX client based on the fixture, a mode, and DMX channel (23 in this example)
+DMXClient client = new DMXClient(fixture, fixture.modes().getFirst(), 23);
+
+// This fixture has only one mode with the following channels:
+// "channels": [
+//   "Red",
+//   "Green",
+//   "Blue",
+//   "Dimmer",
+//   "Effects"
+// ]
+              
+// Set to full red
+client.setValue("red", (byte) 255);
+client.setValue("dimmer", (byte) 255);
+
+// Send the data to the DMX interface
+controller.render(client);
+
+// Color change effect
+for (int i = 0; i <= 100; i++) {
+    float ratio = i / 100.0f;
+    client.setValue("red", (byte) (255 * (1 - ratio)));
+    client.setValue("blue", (byte) (255 * ratio));
+    controller.render(client);
+    sleep(50);
+}
+
+controller.close();
+```
 
 ## Using this Library in your Project
 
 ### From Maven Repository
 
-NOT AVAILABLE YET.
+```xml
+<dependency>
+    <groupId>be.codewriter</groupId>
+    <artifactId>dmx512</artifactId>
+    <version>${dmx512.version}</version>
+</dependency>
+```
 
 ### From GitHub Repository
 

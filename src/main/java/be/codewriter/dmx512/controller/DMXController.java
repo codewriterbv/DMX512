@@ -17,9 +17,11 @@ public interface DMXController {
 
     boolean connect();
 
+    void render(DMXClient client);
+
     void render(List<DMXClient> clients);
 
-    void sendData(byte[] data);
+    void render(byte[] data);
 
     void close();
 
