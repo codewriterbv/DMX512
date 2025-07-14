@@ -34,6 +34,6 @@ deploy:
         applyMavenCentralRules: true
         snapshotSupported: true
         closeRepository: true
-        releaseRepository: false
+        releaseRepository: true
         stagingRepositories:
           - target/staging-deploy

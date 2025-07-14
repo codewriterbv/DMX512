@@ -54,11 +54,11 @@ jobs:
           mvn -ntp -B jreleaser:config
 
       # Only release when approved
-      #- name: Get release approval
-      #  uses: trstringer/manual-approval@v1
-      #  with:
-       #   secret: ${{ github.TOKEN }}
-       #   approvers: FDelporte
+      - name: Get release approval
+        uses: trstringer/manual-approval@v1
+        with:
+         secret: ${{ github.TOKEN }}
+         approvers: FDelporte
 
       # Post JARs to Maven Central
       # https://jreleaser.org/guide/latest/examples/maven/maven-central.html
