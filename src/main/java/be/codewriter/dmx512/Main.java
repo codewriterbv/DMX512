@@ -3,6 +3,7 @@ package be.codewriter.dmx512;
 import be.codewriter.dmx512.client.DMXClient;
 import be.codewriter.dmx512.controller.DMXController;
 import be.codewriter.dmx512.controller.ip.DMXIPController;
+import be.codewriter.dmx512.controller.ip.DMXIPDiscoverTool;
 import be.codewriter.dmx512.controller.serial.DMXSerialController;
 import be.codewriter.dmx512.ofl.OpenFormatLibraryParser;
 import be.codewriter.dmx512.ofl.model.Fixture;
@@ -17,15 +18,27 @@ public class Main {
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class.getName());
 
     public static void main(String[] args) {
-        var ipController = setupIpControllers();
+        runIpDemo();
+        // runSerialDemo();
+    }
+
+    private static void runIpDemo() {
+        var devices = DMXIPDiscoverTool.discoverDevices();
+        if (devices.isEmpty()) {
+            LOGGER.error("No DMX controllers found");
+            return;
+        }
+        var ipController = new DMXIPController(devices.getFirst().address());
         runDemoPartySpot(ipController);
         runDemoPicoSpotMovingHead(ipController);
         ipController.close();
+    }
 
-        //var serialController = setupSerialController();
-        //runDemoPartySpot(serialController);
-        //runDemoPicoSpotMovingHead(serialController);
-        //serialController.close();
+    private static void runSerialDemo() {
+        var serialController = new DMXSerialController("tty.usbserial-B003X1DH");
+        runDemoPartySpot(serialController);
+        runDemoPicoSpotMovingHead(serialController);
+        serialController.close();
     }
 
     private static Fixture getFixturePartySpot() {
@@ -44,44 +57,6 @@ public class Main {
         }
 
         return null;
-    }
-
-    private static DMXSerialController setupSerialController() {
-        try {
-            var controller = new DMXSerialController();
-
-            // List available ports
-            LOGGER.info("Available serial ports:");
-            for (var port : controller.getAvailablePorts()) {
-                LOGGER.info("\t{}", port);
-            }
-
-            // Connect to the DMX interface
-            // On Windows, use something like "COM3"
-            // On Linux, use something like "/dev/ttyUSB0"
-            if (controller.connect("tty.usbserial-B003X1DH")) {
-                LOGGER.info("Connected to DMX interface");
-                return controller;
-            } else {
-                LOGGER.error("Failed to connect to DMX interface");
-            }
-        } catch (Exception ex) {
-            LOGGER.error("Error in the serial demo: {}", ex.getMessage());
-        }
-
-        return null;
-    }
-
-    private static DMXIPController setupIpControllers() {
-        var controller = new DMXIPController();
-
-        LOGGER.info("Available IP ports:");
-        for (var device : controller.discoverDevices()) {
-            LOGGER.info("\t{}", device);
-            controller.connect(device.ipAddress()); // IP address of your Art-Net node
-        }
-
-        return controller;
     }
 
     private static void runDemoPartySpot(DMXController controller) {

@@ -1,19 +1,15 @@
 package be.codewriter.dmx512.controller.serial;
 
 import be.codewriter.dmx512.client.DMXClient;
-import be.codewriter.dmx512.controller.DMXChangeMessage;
-import be.codewriter.dmx512.controller.DMXChangeNotifier;
 import be.codewriter.dmx512.controller.DMXController;
+import be.codewriter.dmx512.controller.change.DMXChangeMessage;
 import be.codewriter.dmx512.helper.DMXMessage;
-import be.codewriter.dmx512.serial.SerialConnection;
 import com.fazecast.jSerialComm.SerialPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HexFormat;
 import java.util.List;
 
@@ -21,27 +17,31 @@ import java.util.List;
  * DMX Serial Controller.
  * Controls DMX lights over USB-to-DMX interface using jSerialComm.
  */
-public class DMXSerialController extends DMXChangeNotifier implements DMXController {
+public class DMXSerialController implements DMXController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXSerialController.class.getName());
 
     private static final int DMX_UNIVERSE_SIZE = 512;
     private final byte[] universe = new byte[DMX_UNIVERSE_SIZE];
+    private final String portName;
     private SerialPort serialPort;
     private OutputStream outputStream;
     private boolean connected = false;
     private volatile boolean isRunning = false;
     private Thread transmitThread;
 
-    public DMXSerialController() {
+    public DMXSerialController(String portName) {
+        this.portName = portName;
+
+        connect();
     }
 
     /**
      * Connect to the USB-DMX interface
      *
-     * @param portName Name of the serial port (e.g., "COM3" on Windows, "/dev/ttyUSB0" on Linux)
      * @return true if connection successful
      */
-    public boolean connect(String portName) {
+    @Override
+    public boolean connect() {
         // Find the port by name
         SerialPort[] ports = SerialPort.getCommPorts();
         for (SerialPort port : ports) {
@@ -150,6 +150,36 @@ public class DMXSerialController extends DMXChangeNotifier implements DMXControl
         System.arraycopy(data, 0, universe, 0, data.length);
     }
 
+    /**
+     * Close the connection to the DMX interface
+     */
+    public void close() {
+        if (connected) {
+            try {
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (serialPort != null) {
+                    serialPort.closePort();
+                }
+                connected = false;
+                notifyListeners(DMXChangeMessage.DISCONNECTED);
+            }
+        }
+    }
+
+    /**
+     * Check if the controller is connected
+     *
+     * @return true if connected
+     */
+    public boolean isConnected() {
+        return connected && serialPort != null && serialPort.isOpen();
+    }
+
     public void sendData() {
         // Start continuous DMX transmission in background
         if (transmitThread == null || !transmitThread.isAlive()) {
@@ -188,47 +218,4 @@ public class DMXSerialController extends DMXChangeNotifier implements DMXControl
     }
 
 
-    /**
-     * Close the connection to the DMX interface
-     */
-    public void close() {
-        if (connected) {
-            try {
-                if (outputStream != null) {
-                    outputStream.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                if (serialPort != null) {
-                    serialPort.closePort();
-                }
-                connected = false;
-                notifyListeners(DMXChangeMessage.DISCONNECTED);
-            }
-        }
-    }
-
-    /**
-     * Check if the controller is connected
-     *
-     * @return true if connected
-     */
-    public boolean isConnected() {
-        return connected && serialPort != null && serialPort.isOpen();
-    }
-
-    /**
-     * Get all the available serial connections
-     */
-    public List<SerialConnection> getAvailablePorts() {
-        SerialPort[] ports = SerialPort.getCommPorts();
-        return Arrays.stream(ports)
-                .map(p -> new SerialConnection(
-                        p.getSystemPortPath(),
-                        p.getSystemPortName(),
-                        p.getDescriptivePortName()))
-                .sorted(Comparator.comparing(SerialConnection::name))
-                .toList();
-    }
 }

@@ -18,11 +18,11 @@ public class ArtNetPacketBuilder {
     public static final short OP_TOD_CONTROL = (short) 0x8200;
     public static final short OP_RDM = (short) 0x8300;
     public static final short OP_RDM_SUB = (short) 0x8400;
+    public static final int ART_NET_PORT = 6454;
     private static final Logger LOGGER = Logger.getLogger(ArtNetPacketBuilder.class.getName());
     // Art-Net Constants
     private static final byte[] ART_NET_HEADER = {'A', 'r', 't', '-', 'N', 'e', 't', 0};
     private static final int PROTOCOL_VERSION = 14;
-    private static final int ART_NET_PORT = 6454;
     private byte sequenceNumber = 0;
     private boolean enableSequencing = true;
     private int physicalPort = 0;

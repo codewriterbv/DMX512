@@ -5,6 +5,7 @@ import java.util.UUID;
 
 public class SACNPacketBuilder {
 
+    public static final int SACN_PORT = 5568;
     // sACN Constants
     private static final byte[] ACN_PACKET_IDENTIFIER = {
             0x41, 0x53, 0x43, 0x2d, 0x45, 0x31, 0x2e, 0x31, 0x37, 0x00, 0x00, 0x00
@@ -13,7 +14,6 @@ public class SACNPacketBuilder {
     private static final int FRAMING_VECTOR = 0x00000002;
     private static final byte DMP_VECTOR = 0x02;
     private static final byte ADDRESS_TYPE_DATA_TYPE = (byte) 0xa1;
-
     private byte sequenceNumber = 0;
     private byte[] cid;
     private String sourceName;
