@@ -35,6 +35,7 @@
         <plugin.appassembler.maven.version>2.1.0</plugin.appassembler.maven.version>
         <plugin.exec.maven.version>3.5.0</plugin.exec.maven.version>
         <plugin.jreleaser.maven.version>1.19.0</plugin.jreleaser.maven.version>
+        <plugin.maven.assembly.version>3.7.1</plugin.maven.assembly.version>
         <plugin.maven.compiler.version>3.13.0</plugin.maven.compiler.version>
         <plugin.maven.jar.version>3.4.2</plugin.maven.jar.version>
     </properties>
@@ -147,6 +148,30 @@
                         <phase>package</phase>
                         <goals>
                             <goal>assemble</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>${plugin.maven.assembly.version}</version>
+                <configuration>
+                    <attach>false</attach>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <descriptors>
+                        <descriptor>src/main/assembly/assembly.xml</descriptor>
+                    </descriptors>
+                    <outputDirectory>${app.distribution.directory}</outputDirectory>
+                    <workDirectory>${project.build.directory}/assembly/work</workDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-distribution</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
                         </goals>
                     </execution>
                 </executions>
