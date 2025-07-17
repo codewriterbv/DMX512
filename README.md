@@ -16,10 +16,12 @@ info: [Introducing a New Java DMX512 Library With Demo JavaFX User Interface](ht
 ### Tested with V0.0.1
 
 * Network
-    * [JUNELIONY ArtNet 1024 2-Port Sulite DMX LAN512 2-Port ArtNet Converter](https://www.amazon.com.be/dp/B0CYPQ2Z4V)
+    * [JUNELIONY ArtNet 1024 2-Port Sulite DMX LAN512 2-Port ArtNet Converter](https://www.amazon.com.be/dp/B0CYPQ2Z4V) with ArtNet protocol
 
 ### Still TODO
 
+* Network
+  * Other protocols
 * Serial
   * [Enttec Open DMX USB Interface](https://www.thomann.de/be/enttec_open_dmx_usb_interface.htm)
   * [DSD TECH SH-RS09B USB to DMX Cable](https://www.amazon.com.be/gp/product/B07WV6P5W6/)
