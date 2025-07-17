@@ -2,6 +2,8 @@
 
 Java library for the DMX512 protocol and Open Fixture Library (OFL).
 
+**THIS PROJECT IS IN AN EARLY STAGE! BREAKING CHANGES ARE EXPECTED...**
+
 This library can be used to connect with USB-to-DMX and IP-to-DMX controllers. It can load fixture definitions from the [Open Fixture Library](https://open-fixture-library.org/) to easily create a Java (user interface) application that can interact with many types of DMX devices.
 
 Check this blog post for more
