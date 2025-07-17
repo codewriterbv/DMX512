@@ -22,7 +22,7 @@ class FixtureParserPicospot20Test {
     @BeforeEach
     void setUp() throws IOException {
         try (InputStream is = getClass().getClassLoader().getResourceAsStream(TEST_FIXTURE_PATH)) {
-            fixture = OpenFormatLibraryParser.parseFixture(is);
+            fixture = OFLParser.parse(is);
         }
     }
 
@@ -135,10 +135,10 @@ class FixtureParserPicospot20Test {
         tempFile.deleteOnExit();
 
         // Write the fixture to a temporary file
-        OpenFormatLibraryParser.writeFixture(fixture, tempFile);
+        OFLParser.write(fixture, tempFile);
 
         // Read it back
-        Fixture readFixture = OpenFormatLibraryParser.parseFixture(tempFile);
+        Fixture readFixture = OFLParser.parse(tempFile);
 
         // Verify the read fixture matches the original
         assertThat(readFixture)
@@ -160,7 +160,7 @@ class FixtureParserPicospot20Test {
                 }
                 """;
 
-        Fixture testFixture = OpenFormatLibraryParser.parseFixture(jsonContent);
+        Fixture testFixture = OFLParser.parse(jsonContent);
         assertThat(testFixture.name()).isEqualTo("Test Fixture");
         assertThat(testFixture.categories()).containsExactly("Test Category");
     }
@@ -169,7 +169,7 @@ class FixtureParserPicospot20Test {
     void shouldHandleInvalidJson() {
         String invalidJson = "{ invalid json }";
 
-        assertThatThrownBy(() -> OpenFormatLibraryParser.parseFixture(invalidJson))
+        assertThatThrownBy(() -> OFLParser.parse(invalidJson))
                 .isInstanceOf(IOException.class);
     }
 }

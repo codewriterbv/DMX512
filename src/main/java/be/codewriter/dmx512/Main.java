@@ -5,7 +5,7 @@ import be.codewriter.dmx512.controller.DMXController;
 import be.codewriter.dmx512.controller.ip.DMXIPController;
 import be.codewriter.dmx512.controller.ip.DMXIPDiscoverTool;
 import be.codewriter.dmx512.controller.serial.DMXSerialController;
-import be.codewriter.dmx512.ofl.OpenFormatLibraryParser;
+import be.codewriter.dmx512.ofl.OFLParser;
 import be.codewriter.dmx512.ofl.model.Fixture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,7 +99,7 @@ public class Main {
 
     private static Fixture getFixture(String fixtureFile) {
         try (InputStream is = Main.class.getClassLoader().getResourceAsStream(fixtureFile)) {
-            return OpenFormatLibraryParser.parseFixture(is);
+            return OFLParser.parse(is);
         } catch (Exception ex) {
             LOGGER.error("Error parsing fixture: {}", ex.getMessage());
         }
@@ -112,7 +112,7 @@ public class Main {
         Fixture fixture;
 
         try (InputStream is = Main.class.getClassLoader().getResourceAsStream("led-party-tcl-spot.json")) {
-            fixture = OpenFormatLibraryParser.parseFixture(is);
+            fixture = OFLParser.parse(is);
         } catch (Exception ex) {
             LOGGER.error("Error parsing fixture: {}", ex.getMessage());
             return;
