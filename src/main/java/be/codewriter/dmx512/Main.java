@@ -26,6 +26,12 @@ public class Main {
             LOGGER.error("No DMX controllers found");
             return;
         }
+
+        for (var device : devices) {
+            LOGGER.info("Found DMX controller {} at address:{}",
+                    device.getName(), device.getAddress());
+        }
+
         var ipController = new DMXIPController(devices.getFirst().address());
 
         // Send raw data
@@ -263,7 +269,7 @@ public class Main {
             controller.render(client);
             Thread.sleep(1000);
 
-            // TILT
+            // COLOR WHEEL
             for (int i = 0; i < 255; i++) {
                 client.setValue("color wheel", (byte) i);
                 controller.render(client);
