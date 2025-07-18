@@ -4,9 +4,7 @@ import be.codewriter.dmx512.controller.DMXController;
 import be.codewriter.dmx512.controller.ip.DMXIPController;
 import be.codewriter.dmx512.controller.ip.DMXIPDiscoverTool;
 import be.codewriter.dmx512.controller.serial.DMXSerialController;
-import be.codewriter.dmx512.model.DMXClient;
-import be.codewriter.dmx512.model.DMXUniverse;
-import be.codewriter.dmx512.ofl.OpenFormatLibraryParser;
+import be.codewriter.dmx512.ofl.OFLParser;
 import be.codewriter.dmx512.ofl.model.Fixture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +25,12 @@ public class Main {
             LOGGER.error("No DMX controllers found");
             return;
         }
+
+        for (var device : devices) {
+            LOGGER.info("Found DMX controller {} at address:{}",
+                    device.getName(), device.getAddress());
+        }
+
         var ipController = new DMXIPController(devices.getFirst().address());
         int universe = 1;
 
@@ -95,7 +99,7 @@ public class Main {
 
     private static Fixture getFixture(String fixtureFile) {
         try (InputStream is = Main.class.getClassLoader().getResourceAsStream(fixtureFile)) {
-            return OpenFormatLibraryParser.parseFixture(is);
+            return OFLParser.parse(is);
         } catch (Exception ex) {
             LOGGER.error("Error parsing fixture: {}", ex.getMessage());
         }
@@ -108,7 +112,7 @@ public class Main {
         Fixture fixture;
 
         try (InputStream is = Main.class.getClassLoader().getResourceAsStream("led-party-tcl-spot.json")) {
-            fixture = OpenFormatLibraryParser.parseFixture(is);
+            fixture = OFLParser.parse(is);
         } catch (Exception ex) {
             LOGGER.error("Error parsing fixture: {}", ex.getMessage());
             return;
@@ -269,7 +273,7 @@ public class Main {
             controller.render(universe);
             Thread.sleep(1000);
 
-            // TILT
+            // COLOR WHEEL
             for (int i = 0; i < 255; i++) {
                 client.setValue("color wheel", (byte) i);
                 controller.render(universe);

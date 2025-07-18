@@ -21,7 +21,7 @@ class FixtureParserLedPartyTclTest {
     @BeforeEach
     void setUp() throws IOException {
         try (InputStream is = getClass().getClassLoader().getResourceAsStream(TEST_FIXTURE_PATH)) {
-            fixture = OpenFormatLibraryParser.parseFixture(is);
+            fixture = OFLParser.parse(is);
         }
     }
 
@@ -90,10 +90,10 @@ class FixtureParserLedPartyTclTest {
         tempFile.deleteOnExit();
 
         // Write the fixture to a temporary file
-        OpenFormatLibraryParser.writeFixture(fixture, tempFile);
+        OFLParser.write(fixture, tempFile);
 
         // Read it back
-        Fixture readFixture = OpenFormatLibraryParser.parseFixture(tempFile);
+        Fixture readFixture = OFLParser.parse(tempFile);
 
         // Verify the read fixture matches the original
         assertThat(readFixture)
@@ -115,7 +115,7 @@ class FixtureParserLedPartyTclTest {
                 }
                 """;
 
-        Fixture testFixture = OpenFormatLibraryParser.parseFixture(jsonContent);
+        Fixture testFixture = OFLParser.parse(jsonContent);
         assertThat(testFixture.name()).isEqualTo("Test LED PAR Spot");
         assertThat(testFixture.categories()).contains("Color Changer");
     }
@@ -124,7 +124,7 @@ class FixtureParserLedPartyTclTest {
     void shouldHandleInvalidJson() {
         String invalidJson = "{ invalid json }";
 
-        assertThatThrownBy(() -> OpenFormatLibraryParser.parseFixture(invalidJson))
+        assertThatThrownBy(() -> OFLParser.parse(invalidJson))
                 .isInstanceOf(IOException.class);
     }
 }

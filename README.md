@@ -1,18 +1,27 @@
 # DMX512 Java Library
 
-Java library for the DMX512 protocol and Open Fixture Library.
+Java library for the DMX512 protocol and Open Fixture Library (OFL).
 
-This library can be used to connect with USB-to-DMX and IP-to-DMX controllers. It can load fixture definitions from the [Open Fixture Library](https://open-fixture-library.org/) (OFL) to easily create a Java (user interface) application that can interact with many types of DMX devices.
+**THIS PROJECT IS IN AN EARLY STAGE! BREAKING CHANGES ARE EXPECTED...**
+
+This library can be used to connect with USB-to-DMX and IP-to-DMX controllers. It can load fixture definitions from the [Open Fixture Library](https://open-fixture-library.org/) to easily create a Java (user interface) application that can interact with many types of DMX devices.
+
+Check this blog post for more
+info: [Introducing a New Java DMX512 Library With Demo JavaFX User Interface](https://webtechie.be/post/2025-07-17-introducing-java-dmx512-library-with-demo-javafx-ui/). A full explanation is available on YouTube:
+
+[![DMX512 Java library intro video on YouTube](https://img.youtube.com/vi/ztrO3Crexmg/0.jpg)](https://www.youtube.com/watch?v=ztrO3Crexmg)
 
 ## Computer to DMX Controllers
 
 ### Tested with V0.0.1
 
 * Network
-    * [JUNELIONY ArtNet 1024 2-Port Sulite DMX LAN512 2-Port ArtNet Converter](https://www.amazon.com.be/dp/B0CYPQ2Z4V)
+    * [JUNELIONY ArtNet 1024 2-Port Sulite DMX LAN512 2-Port ArtNet Converter](https://www.amazon.com.be/dp/B0CYPQ2Z4V) with ArtNet protocol
 
 ### Still TODO
 
+* Network
+  * Other protocols
 * Serial
   * [Enttec Open DMX USB Interface](https://www.thomann.de/be/enttec_open_dmx_usb_interface.htm)
   * [DSD TECH SH-RS09B USB to DMX Cable](https://www.amazon.com.be/gp/product/B07WV6P5W6/)
