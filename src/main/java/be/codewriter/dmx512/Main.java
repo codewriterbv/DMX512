@@ -1,10 +1,11 @@
 package be.codewriter.dmx512;
 
-import be.codewriter.dmx512.client.DMXClient;
 import be.codewriter.dmx512.controller.DMXController;
 import be.codewriter.dmx512.controller.ip.DMXIPController;
 import be.codewriter.dmx512.controller.ip.DMXIPDiscoverTool;
 import be.codewriter.dmx512.controller.serial.DMXSerialController;
+import be.codewriter.dmx512.model.DMXClient;
+import be.codewriter.dmx512.model.DMXUniverse;
 import be.codewriter.dmx512.ofl.OpenFormatLibraryParser;
 import be.codewriter.dmx512.ofl.model.Fixture;
 import org.slf4j.Logger;
@@ -27,6 +28,7 @@ public class Main {
             return;
         }
         var ipController = new DMXIPController(devices.getFirst().address());
+        int universe = 1;
 
         // Send raw data
         // The PicoSpot on DMX channel 1 expects 11 values
@@ -44,13 +46,13 @@ public class Main {
         "Program Speed"
         */
         // Set all to 0
-        ipController.render(new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        ipController.render(universe, new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         sleep(2_000);
         // Set pan and tilt to 127
-        ipController.render(new byte[]{(byte) 127, (byte) 127, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        ipController.render(universe, new byte[]{(byte) 127, (byte) 127, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         sleep(2_000);
         // Set pan/tilt back to 0, color wheel to 44, and dimmer full open
-        ipController.render(new byte[]{0, 0, 0, 0, 0, (byte) 44, 0, (byte) 255, 0, 0, 0});
+        ipController.render(universe, new byte[]{0, 0, 0, 0, 0, (byte) 44, 0, (byte) 255, 0, 0, 0});
 
         sleep(5_000);
 
@@ -114,20 +116,21 @@ public class Main {
 
         // Create a DMX client based on the fixture, a mode, and DMX channel (23 in this example)
         DMXClient client = new DMXClient(fixture, fixture.modes().getFirst(), 23);
+        DMXUniverse universe = new DMXUniverse(1, client);
 
         // Set to full red
         client.setValue("red", (byte) 255);
         client.setValue("dimmer", (byte) 255);
 
         // Send the data to the DMX interface
-        controller.render(client);
+        controller.render(universe);
 
         // Color change effect
         for (int i = 0; i <= 100; i++) {
             float ratio = i / 100.0f;
             client.setValue("red", (byte) (255 * (1 - ratio)));
             client.setValue("blue", (byte) (255 * ratio));
-            controller.render(client);
+            controller.render(universe);
             sleep(50);
         }
     }
@@ -140,14 +143,15 @@ public class Main {
             // Create some fixtures
             var fixture = getFixturePartySpot();
             DMXClient client = new DMXClient(fixture, fixture.modes().getFirst(), 23);
+            DMXUniverse universe = new DMXUniverse(1, client);
 
             // Set dimmer full
             client.setValue("dimmer", (byte) 255);
-            controller.render(client);
+            controller.render(universe);
             Thread.sleep(50);
             // Set effects
             client.setValue("effects", (byte) 255);
-            controller.render(client);
+            controller.render(universe);
             Thread.sleep(50);
 
             // Set colors
@@ -155,28 +159,28 @@ public class Main {
             client.setValue("red", (byte) 255);
             client.setValue("green", (byte) 0);
             client.setValue("blue", (byte) 0);
-            controller.render(client);
+            controller.render(universe);
             Thread.sleep(3000);
 
             LOGGER.info("Setting GREEN");
             client.setValue("red", (byte) 0);
             client.setValue("green", (byte) 255);
             client.setValue("blue", (byte) 0);
-            controller.render(client);
+            controller.render(universe);
             Thread.sleep(3000);
 
             LOGGER.info("Setting BLUE");
             client.setValue("red", (byte) 0);
             client.setValue("green", (byte) 0);
             client.setValue("blue", (byte) 255);
-            controller.render(client);
+            controller.render(universe);
             Thread.sleep(3000);
 
             LOGGER.info("Setting WHITE");
             client.setValue("red", (byte) 255);
             client.setValue("green", (byte) 255);
             client.setValue("blue", (byte) 255);
-            controller.render(client);
+            controller.render(universe);
             Thread.sleep(3000);
 
             // Fade effect example
@@ -184,7 +188,7 @@ public class Main {
             client.setValue("red", (byte) 0);
             client.setValue("green", (byte) 0);
             client.setValue("blue", (byte) 0);
-            controller.render(client);
+            controller.render(universe);
             Thread.sleep(50);
 
             /*
@@ -218,6 +222,7 @@ public class Main {
             }
 
             DMXClient client = new DMXClient(fixture, mode, 1);
+            DMXUniverse universe = new DMXUniverse(1, client);
 
             /*
             "Pan",
@@ -240,40 +245,40 @@ public class Main {
             client.setValue("gobo wheel", (byte) 0);
             client.setValue("dimmer", (byte) 255);
             client.setValue("program", (byte) 0);
-            controller.render(client);
+            controller.render(universe);
             Thread.sleep(3000);
 
             // PAN
             for (int i = 0; i < 255; i++) {
                 client.setValue("pan", (byte) i);
-                controller.render(client);
+                controller.render(universe);
                 Thread.sleep(10);
             }
 
             // TILT
             for (int i = 0; i < 255; i++) {
                 client.setValue("tilt", (byte) i);
-                controller.render(client);
+                controller.render(universe);
                 Thread.sleep(10);
             }
 
             // MIDDLE
             client.setValue("pan", (byte) 127);
             client.setValue("tilt", (byte) 127);
-            controller.render(client);
+            controller.render(universe);
             Thread.sleep(1000);
 
             // TILT
             for (int i = 0; i < 255; i++) {
                 client.setValue("color wheel", (byte) i);
-                controller.render(client);
+                controller.render(universe);
                 Thread.sleep(250);
             }
 
             // GOBO
             for (int i = 0; i < 255; i++) {
                 client.setValue("gobo wheel", (byte) i);
-                controller.render(client);
+                controller.render(universe);
                 Thread.sleep(250);
             }
         } catch (Exception e) {

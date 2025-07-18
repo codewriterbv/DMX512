@@ -1,6 +1,6 @@
 package be.codewriter.dmx512;
 
-import be.codewriter.dmx512.client.DMXClient;
+import be.codewriter.dmx512.model.DMXClient;
 import be.codewriter.dmx512.ofl.model.Channel;
 import be.codewriter.dmx512.ofl.model.Fixture;
 import be.codewriter.dmx512.ofl.model.Mode;

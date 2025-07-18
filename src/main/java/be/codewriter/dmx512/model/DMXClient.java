@@ -1,4 +1,4 @@
-package be.codewriter.dmx512.client;
+package be.codewriter.dmx512.model;
 
 import be.codewriter.dmx512.ofl.model.Fixture;
 import be.codewriter.dmx512.ofl.model.Mode;

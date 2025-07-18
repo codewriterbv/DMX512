@@ -1,8 +1,8 @@
 package be.codewriter.dmx512.controller;
 
-import be.codewriter.dmx512.client.DMXClient;
 import be.codewriter.dmx512.controller.change.DMXChangeListener;
 import be.codewriter.dmx512.controller.change.DMXChangeMessage;
+import be.codewriter.dmx512.model.DMXUniverse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,11 +17,9 @@ public interface DMXController {
 
     boolean connect();
 
-    void render(DMXClient client);
+    void render(DMXUniverse universe);
 
-    void render(List<DMXClient> clients);
-
-    void render(byte[] data);
+    void render(int id, byte[] data);
 
     void close();
 

@@ -1,9 +1,8 @@
 package be.codewriter.dmx512.controller.serial;
 
-import be.codewriter.dmx512.client.DMXClient;
 import be.codewriter.dmx512.controller.DMXController;
 import be.codewriter.dmx512.controller.change.DMXChangeMessage;
-import be.codewriter.dmx512.helper.DMXMessage;
+import be.codewriter.dmx512.model.DMXUniverse;
 import com.fazecast.jSerialComm.SerialPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HexFormat;
-import java.util.List;
 
 /**
  * DMX Serial Controller.
@@ -20,8 +18,6 @@ import java.util.List;
 public class DMXSerialController implements DMXController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXSerialController.class.getName());
 
-    private static final int DMX_UNIVERSE_SIZE = 512;
-    private final byte[] universe = new byte[DMX_UNIVERSE_SIZE];
     private final String portName;
     private SerialPort serialPort;
     private OutputStream outputStream;
@@ -96,17 +92,12 @@ public class DMXSerialController implements DMXController {
     }
 
     @Override
-    public synchronized void render(DMXClient client) {
-        render(List.of(client));
+    public synchronized void render(DMXUniverse universe) {
+        render(universe.getId(), universe.getData());
     }
 
     @Override
-    public synchronized void render(List<DMXClient> clients) {
-        render((new DMXMessage(clients)).getData());
-    }
-
-    @Override
-    public synchronized void render(byte[] data) {
+    public synchronized void render(int universe, byte[] data) {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("DMX message: {}", HexFormat.of().formatHex(data));
         }
@@ -190,7 +181,7 @@ public class DMXSerialController implements DMXController {
             LOGGER.error("Failed to send DMX data: {}", e.getMessage());
         }*/
 
-        System.arraycopy(data, 0, universe, 0, data.length);
+        // System.arraycopy(data, 0, universe, 0, data.length);
     }
 
     public void sendData() {
@@ -216,10 +207,10 @@ public class DMXSerialController implements DMXController {
 
                 // Start code (0) + DMX data
                 serialPort.getOutputStream().write(0); // Start code
-                serialPort.getOutputStream().write(universe);
+                // TODO serialPort.getOutputStream().write(universe);
                 serialPort.getOutputStream().flush();
 
-                LOGGER.info("Sending DMX data: {}", HexFormat.of().formatHex(universe));
+                // TODO LOGGER.info("Sending DMX data: {}", HexFormat.of().formatHex(universe));
 
                 // DMX refresh rate (typically 40Hz)
                 Thread.sleep(25); // 25ms = 40Hz

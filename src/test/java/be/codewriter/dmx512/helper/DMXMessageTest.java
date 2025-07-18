@@ -1,6 +1,7 @@
 package be.codewriter.dmx512.helper;
 
 import be.codewriter.dmx512.MotherObjects;
+import be.codewriter.dmx512.model.DMXUniverse;
 import be.codewriter.dmx512.tool.HexTool;
 import org.junit.jupiter.api.Test;
 
@@ -16,8 +17,8 @@ class DMXMessageTest {
         var client1 = MotherObjects.fiveChannelClient((byte) 0x01, (byte) 0x02, (byte) 0x03, (byte) 0x04, (byte) 0x05, 1);
         var client2 = MotherObjects.nineChannelClient((byte) 0x11, (byte) 0x22, (byte) 0x33, (byte) 0x44, (byte) 0x55, (byte) 0x66, (byte) 0x77, (byte) 0x88, (byte) 0x99, 10);
 
-        var dmxMessage = new DMXMessage(List.of(client1, client2));
-        var data = dmxMessage.getData();
+        var universe = new DMXUniverse(1, List.of(client1, client2));
+        var data = universe.getData();
 
         var client1Offset = client1.getAddress() - 1;
         var client2Offset = client2.getAddress() - 1;
