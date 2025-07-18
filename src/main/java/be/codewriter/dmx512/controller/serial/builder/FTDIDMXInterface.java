@@ -44,8 +44,8 @@ public class FTDIDMXInterface {
     /**
      * Default constructor using OPEN_DMX_USB protocol
      *
-     * @param inputStream
-     * @param outputStream
+     * @param inputStream  input stream
+     * @param outputStream output stream
      */
     public FTDIDMXInterface(InputStream inputStream, OutputStream outputStream) {
         this(inputStream, outputStream, DMXProtocolType.OPEN_DMX_USB);
@@ -96,7 +96,7 @@ public class FTDIDMXInterface {
     /**
      * Example usage demonstrating how to use the class
      *
-     * @param args
+     * @param args commandline arguments
      */
     public static void main(String[] args) {
         try {
@@ -157,7 +157,7 @@ public class FTDIDMXInterface {
             System.out.println("Created full universe with all channels at 128");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e);
         }
     }
 

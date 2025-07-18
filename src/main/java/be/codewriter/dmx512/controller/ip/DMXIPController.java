@@ -54,8 +54,8 @@ public class DMXIPController implements DMXController {
     }
 
     @Override
-    public DMXType getType() {
-        return DMXType.IP;
+    public DMXControllerType getType() {
+        return DMXControllerType.IP;
     }
 
     @Override

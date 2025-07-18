@@ -32,8 +32,8 @@ public class DMXSerialController implements DMXController {
     }
 
     @Override
-    public DMXType getType() {
-        return DMXType.SERIAL;
+    public DMXControllerType getType() {
+        return DMXControllerType.SERIAL;
     }
 
     @Override

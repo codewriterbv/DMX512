@@ -29,6 +29,12 @@ public record Fixture(
         LinkedHashMap<String, Channel> availableChannels,
         List<Mode> modes
 ) {
+    /**
+     * Find the given mode by name
+     *
+     * @param name name of the mode
+     * @return the {@link Mode} or null
+     */
     public Mode getModeByName(String name) {
         return modes.stream()
                 .filter(mode -> mode.name().equalsIgnoreCase(name))

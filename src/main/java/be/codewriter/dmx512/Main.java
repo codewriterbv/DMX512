@@ -4,6 +4,8 @@ import be.codewriter.dmx512.controller.DMXController;
 import be.codewriter.dmx512.controller.ip.DMXIPController;
 import be.codewriter.dmx512.controller.ip.DMXIPDiscoverTool;
 import be.codewriter.dmx512.controller.serial.DMXSerialController;
+import be.codewriter.dmx512.model.DMXClient;
+import be.codewriter.dmx512.model.DMXUniverse;
 import be.codewriter.dmx512.ofl.OFLParser;
 import be.codewriter.dmx512.ofl.model.Fixture;
 import org.slf4j.Logger;
@@ -11,9 +13,17 @@ import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 
+/**
+ * Application to demo and test the DMX512 library
+ */
 public class Main {
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class.getName());
 
+    /**
+     * Run the demo/test application
+     *
+     * @param args command line arguments
+     */
     public static void main(String[] args) {
         runIpDemo();
         // runSerialDemo();

@@ -41,6 +41,8 @@ public class EnttecDMXUSBPro {
 
     /**
      * Example usage demonstrating how to use the class
+     *
+     * @param args commandline arguments
      */
     public static void main(String[] args) {
         // Example usage - you would replace these with actual serial port streams

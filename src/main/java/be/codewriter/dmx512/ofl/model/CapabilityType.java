@@ -446,6 +446,8 @@ public enum CapabilityType {
         }
 
         /**
+         * Get the notes
+         *
          * @return notes about the property
          */
         public String getNotes() {

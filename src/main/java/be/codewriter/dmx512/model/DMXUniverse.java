@@ -11,7 +11,7 @@ public class DMXUniverse {
     /**
      * Universe constructor, creates an empty clients list
      *
-     * @param id
+     * @param id id
      */
     public DMXUniverse(int id) {
         this(id, new ArrayList<>());
@@ -20,8 +20,8 @@ public class DMXUniverse {
     /**
      * Universe constructor, creating a list with only the given client
      *
-     * @param id
-     * @param client
+     * @param id     id
+     * @param client {@link DMXClient}
      */
     public DMXUniverse(int id, DMXClient client) {
         this(id, List.of(client));
@@ -30,8 +30,8 @@ public class DMXUniverse {
     /**
      * Universe constructor
      *
-     * @param id
-     * @param clients
+     * @param id      id
+     * @param clients list if {@link DMXClient}
      */
     public DMXUniverse(int id, List<DMXClient> clients) {
         if (id < 0 || id > 32767) {
@@ -57,10 +57,20 @@ public class DMXUniverse {
         return data;
     }
 
+    /**
+     * Get the length
+     *
+     * @return length
+     */
     public int getLength() {
         return getData().length;
     }
 
+    /**
+     * Get the id
+     *
+     * @return id
+     */
     public int getId() {
         return id;
     }

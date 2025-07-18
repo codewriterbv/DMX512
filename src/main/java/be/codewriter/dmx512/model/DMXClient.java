@@ -149,6 +149,8 @@ public class DMXClient {
     }
 
     /**
+     * Get the value at the given index
+     *
      * @param idx index of the channel
      * @return the value for the given index
      */
@@ -160,6 +162,8 @@ public class DMXClient {
     }
 
     /**
+     * Get the value for the given channel name
+     *
      * @param key the name of the channel as defined in the selected mode
      * @return the value for the given channel by name
      */

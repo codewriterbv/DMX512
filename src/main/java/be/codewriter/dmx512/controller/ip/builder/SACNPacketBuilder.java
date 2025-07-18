@@ -112,6 +112,9 @@ public class SACNPacketBuilder {
 
     /**
      * Convenience method with default priority (100)
+     *
+     * @param dmxData  data
+     * @param universe universe id
      */
     public byte[] createSACNPacket(byte[] dmxData, int universe) {
         return createSACNPacket(dmxData, universe, 100);
@@ -126,6 +129,8 @@ public class SACNPacketBuilder {
 
     /**
      * Convert UUID to 16-byte array
+     *
+     * @param uuid uuid
      */
     private byte[] uuidToBytes(UUID uuid) {
         ByteBuffer buffer = ByteBuffer.allocate(16);
@@ -143,6 +148,8 @@ public class SACNPacketBuilder {
 
     /**
      * Set a custom CID
+     *
+     * @param uuid uuid
      */
     public void setCID(UUID uuid) {
         this.cid = uuidToBytes(uuid);
@@ -150,6 +157,8 @@ public class SACNPacketBuilder {
 
     /**
      * Set source name
+     *
+     * @param sourceName source name
      */
     public void setSourceName(String sourceName) {
         this.sourceName = sourceName;
