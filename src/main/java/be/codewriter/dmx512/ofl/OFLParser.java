@@ -27,7 +27,7 @@ public class OFLParser {
      *
      * @param file file to be loaded
      * @return {@link Fixture}
-     * @throws IOException
+     * @throws IOException file reading error
      */
     public static Fixture parse(File file) throws IOException {
         return mapper.readValue(file, Fixture.class);
@@ -38,7 +38,7 @@ public class OFLParser {
      *
      * @param jsonString json string
      * @return {@link Fixture}
-     * @throws IOException
+     * @throws IOException file reading error
      */
     public static Fixture parse(String jsonString) throws IOException {
         return mapper.readValue(jsonString, Fixture.class);
@@ -49,7 +49,7 @@ public class OFLParser {
      *
      * @param is inputstream
      * @return {@link Fixture}
-     * @throws IOException
+     * @throws IOException file reading error
      */
     public static Fixture parse(InputStream is) throws IOException {
         return parse(new String(is.readAllBytes()));
@@ -60,7 +60,7 @@ public class OFLParser {
      *
      * @param fixture {@link Fixture}
      * @param file    file to be created
-     * @throws IOException
+     * @throws IOException file reading error
      */
     public static void write(Fixture fixture, File file) throws IOException {
         mapper.writerWithDefaultPrettyPrinter().writeValue(file, fixture);

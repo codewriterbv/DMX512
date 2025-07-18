@@ -3,6 +3,9 @@ package be.codewriter.dmx512.model;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Defines a DMX universe by id and list of {@link DMXClient}
+ */
 public class DMXUniverse {
 
     private final int id;
@@ -41,6 +44,11 @@ public class DMXUniverse {
         this.clients = clients;
     }
 
+    /**
+     * Get the data
+     *
+     * @return byte array
+     */
     public byte[] getData() {
         var length = clients.stream()
                 .mapToInt(client -> client.getAddress() + client.getDataLength() - 1)

@@ -8,8 +8,13 @@ import java.util.UUID;
  */
 public class SACNPacketBuilder {
 
+    /**
+     * Default SACN part
+     */
     public static final int SACN_PORT = 5568;
-    // sACN Constants
+    /**
+     * sACN Constants
+     */
     private static final byte[] ACN_PACKET_IDENTIFIER = {
             0x41, 0x53, 0x43, 0x2d, 0x45, 0x31, 0x2e, 0x31, 0x37, 0x00, 0x00, 0x00
     };

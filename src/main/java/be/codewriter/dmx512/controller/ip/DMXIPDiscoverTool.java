@@ -12,6 +12,9 @@ import java.util.*;
 import static be.codewriter.dmx512.controller.ip.builder.ArtNetPacketBuilder.ART_NET_PORT;
 import static be.codewriter.dmx512.controller.ip.builder.SACNPacketBuilder.SACN_PORT;
 
+/**
+ * Tool to detect IP-to-DMX controllers
+ */
 public class DMXIPDiscoverTool {
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXIPDiscoverTool.class.getName());
     private static final long DISCOVER_TIMEOUT_MILLIS = 2_000;
