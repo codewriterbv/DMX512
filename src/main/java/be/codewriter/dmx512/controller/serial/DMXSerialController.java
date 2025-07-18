@@ -1,7 +1,7 @@
 package be.codewriter.dmx512.controller.serial;
 
 import be.codewriter.dmx512.controller.DMXController;
-import be.codewriter.dmx512.controller.change.DMXChangeMessage;
+import be.codewriter.dmx512.controller.change.DMXStatusChangeMessage;
 import be.codewriter.dmx512.model.DMXUniverse;
 import com.fazecast.jSerialComm.SerialPort;
 import org.slf4j.Logger;
@@ -81,12 +81,12 @@ public class DMXSerialController implements DMXController {
         if (serialPort.openPort()) {
             outputStream = serialPort.getOutputStream();
             connected = true;
-            notifyListeners(DMXChangeMessage.CONNECTED);
+            notifyListeners(DMXStatusChangeMessage.CONNECTED);
             sendData();
             return true;
         } else {
             LOGGER.error("Failed to open port: {}", portName);
-            notifyListeners(DMXChangeMessage.DISCONNECTED);
+            notifyListeners(DMXStatusChangeMessage.DISCONNECTED);
             return false;
         }
     }
@@ -126,7 +126,7 @@ public class DMXSerialController implements DMXController {
                     serialPort.closePort();
                 }
                 connected = false;
-                notifyListeners(DMXChangeMessage.DISCONNECTED);
+                notifyListeners(DMXStatusChangeMessage.DISCONNECTED);
             }
         }
     }

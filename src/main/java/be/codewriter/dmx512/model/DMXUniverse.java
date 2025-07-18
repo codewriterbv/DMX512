@@ -8,14 +8,31 @@ public class DMXUniverse {
     private final int id;
     private final List<DMXClient> clients;
 
+    /**
+     * Universe constructor, creates an empty clients list
+     *
+     * @param id
+     */
     public DMXUniverse(int id) {
         this(id, new ArrayList<>());
     }
 
+    /**
+     * Universe constructor, creating a list with only the given client
+     *
+     * @param id
+     * @param client
+     */
     public DMXUniverse(int id, DMXClient client) {
         this(id, List.of(client));
     }
 
+    /**
+     * Universe constructor
+     *
+     * @param id
+     * @param clients
+     */
     public DMXUniverse(int id, List<DMXClient> clients) {
         if (id < 0 || id > 32767) {
             throw new IllegalArgumentException("Universe must be between 0 and 32767");

@@ -1,7 +1,7 @@
 package be.codewriter.dmx512.controller;
 
 import be.codewriter.dmx512.controller.change.DMXChangeListener;
-import be.codewriter.dmx512.controller.change.DMXChangeMessage;
+import be.codewriter.dmx512.controller.change.DMXStatusChangeMessage;
 import be.codewriter.dmx512.model.DMXUniverse;
 
 import java.util.ArrayList;
@@ -33,12 +33,12 @@ public interface DMXController {
         listeners.remove(listener);
     }
 
-    default void notifyListeners(DMXChangeMessage dmxChangeMessage) {
-        notifyListeners(dmxChangeMessage, "");
+    default void notifyListeners(DMXStatusChangeMessage dmxStatusChangeMessage) {
+        notifyListeners(dmxStatusChangeMessage, "");
     }
 
-    default void notifyListeners(DMXChangeMessage dmxChangeMessage, String value) {
-        listeners.forEach(l -> l.notify(dmxChangeMessage, value));
+    default void notifyListeners(DMXStatusChangeMessage dmxStatusChangeMessage, String value) {
+        listeners.forEach(l -> l.notify(dmxStatusChangeMessage, value));
     }
 
     enum DMXType {

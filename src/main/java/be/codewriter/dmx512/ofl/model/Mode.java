@@ -2,6 +2,13 @@ package be.codewriter.dmx512.ofl.model;
 
 import java.util.List;
 
+/**
+ * OFL definition of a mode
+ *
+ * @param name      name
+ * @param shortName short name
+ * @param channels  list of channels
+ */
 public record Mode(
         String name,
         String shortName,

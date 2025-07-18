@@ -1,4 +1,4 @@
-package be.codewriter.dmx512.controller.serial;
+package be.codewriter.dmx512.controller.serial.builder;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,6 +43,9 @@ public class FTDIDMXInterface {
 
     /**
      * Default constructor using OPEN_DMX_USB protocol
+     *
+     * @param inputStream
+     * @param outputStream
      */
     public FTDIDMXInterface(InputStream inputStream, OutputStream outputStream) {
         this(inputStream, outputStream, DMXProtocolType.OPEN_DMX_USB);
@@ -92,6 +95,8 @@ public class FTDIDMXInterface {
 
     /**
      * Example usage demonstrating how to use the class
+     *
+     * @param args
      */
     public static void main(String[] args) {
         try {
@@ -403,9 +408,21 @@ public class FTDIDMXInterface {
      * Enumeration of supported FTDI DMX protocol types
      */
     public enum DMXProtocolType {
-        OPEN_DMX_USB,           // Simple serial transmission
-        FTDI_CHIP_DIRECT,       // Direct FTDI chip communication
-        ENTTEC_OPEN_DMX,        // Enttec Open DMX USB (FTDI-based)
-        GENERIC_SERIAL          // Generic serial-based DMX
+        /**
+         * Simple serial transmission
+         */
+        OPEN_DMX_USB,
+        /**
+         * Direct FTDI chip communication
+         */
+        FTDI_CHIP_DIRECT,
+        /**
+         * Enttec Open DMX USB (FTDI-based)
+         */
+        ENTTEC_OPEN_DMX,
+        /**
+         * Generic serial-based DMX
+         */
+        GENERIC_SERIAL
     }
 }

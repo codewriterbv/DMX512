@@ -1,4 +1,4 @@
-package be.codewriter.dmx512.controller.serial;
+package be.codewriter.dmx512.controller.serial.builder;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

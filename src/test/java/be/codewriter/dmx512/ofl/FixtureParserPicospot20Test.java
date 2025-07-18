@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * https://open-fixture-library.org/fun-generation/picospot-20-led
+ * <a href="https://open-fixture-library.org/fun-generation/picospot-20-led">...</a>
  */
 class FixtureParserPicospot20Test {
     private static final String TEST_FIXTURE_PATH = "ofl/fun-generation/picospot-20-led.json";
@@ -66,7 +66,7 @@ class FixtureParserPicospot20Test {
                 .containsExactly(162, 242, 174);
         assertThat(physical.weight()).isEqualTo(3);
         assertThat(physical.power()).isEqualTo(35);
-        assertThat(physical.DMXconnector()).isEqualTo("3-pin");
+        assertThat(physical.dmxConnector()).isEqualTo("3-pin");
         assertThat(physical.bulb().type()).isEqualTo("12W white CREE LED");
         assertThat(physical.lens().degreesMinMax())
                 .hasSize(2)
@@ -80,7 +80,7 @@ class FixtureParserPicospot20Test {
         assertThat(colorWheel.slots())
                 .hasSize(8)
                 .satisfies(slots -> {
-                    Slot firstSlot = slots.get(0);
+                    Slot firstSlot = slots.getFirst();
                     assertThat(firstSlot.type()).isEqualTo("Color");
                     assertThat(firstSlot.name()).isEqualTo("White");
                     assertThat(firstSlot.colors())
@@ -121,7 +121,7 @@ class FixtureParserPicospot20Test {
         assertThat(colorWheelChannel.capabilities())
                 .isNotEmpty()
                 .satisfies(caps -> {
-                    Capability firstCap = caps.get(0);
+                    Capability firstCap = caps.getFirst();
                     assertThat(firstCap.dmxRange())
                             .containsExactly(0, 10);
                     assertThat(firstCap.type()).isEqualTo(CapabilityType.WHEEL_SLOT);

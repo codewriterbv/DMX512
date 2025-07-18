@@ -9,6 +9,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Parser to load OFL files.
+ */
 public class OpenFormatLibraryParser {
 
     private static final ObjectMapper mapper = JsonMapper.builder()

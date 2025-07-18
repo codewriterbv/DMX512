@@ -114,8 +114,9 @@ public class Main {
             return;
         }
 
-        // Create a DMX client based on the fixture, a mode, and DMX channel (23 in this example)
-        DMXClient client = new DMXClient(fixture, fixture.modes().getFirst(), 23);
+        // Create a DMX client based on the fixture and DMX channel (23 in this example)
+        // The first mode of the fixture will be used in the DMXClient constructor to define the number of channels
+        DMXClient client = new DMXClient(23, fixture);
         DMXUniverse universe = new DMXUniverse(1, client);
 
         // Set to full red
@@ -142,7 +143,7 @@ public class Main {
         try {
             // Create some fixtures
             var fixture = getFixturePartySpot();
-            DMXClient client = new DMXClient(fixture, fixture.modes().getFirst(), 23);
+            DMXClient client = new DMXClient(23, fixture);
             DMXUniverse universe = new DMXUniverse(1, client);
 
             // Set dimmer full
@@ -221,7 +222,7 @@ public class Main {
                 return;
             }
 
-            DMXClient client = new DMXClient(fixture, mode, 1);
+            DMXClient client = new DMXClient(1, fixture, mode);
             DMXUniverse universe = new DMXUniverse(1, client);
 
             /*

@@ -1,7 +1,7 @@
 package be.codewriter.dmx512.controller.ip;
 
-import be.codewriter.dmx512.network.DMXIPDevice;
-import be.codewriter.dmx512.network.Protocol;
+import be.codewriter.dmx512.controller.ip.builder.ArtNetPacketBuilder;
+import be.codewriter.dmx512.controller.ip.builder.SACNPacketBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,8 +9,8 @@ import java.io.IOException;
 import java.net.*;
 import java.util.*;
 
-import static be.codewriter.dmx512.controller.ip.ArtNetPacketBuilder.ART_NET_PORT;
-import static be.codewriter.dmx512.controller.ip.SACNPacketBuilder.SACN_PORT;
+import static be.codewriter.dmx512.controller.ip.builder.ArtNetPacketBuilder.ART_NET_PORT;
+import static be.codewriter.dmx512.controller.ip.builder.SACNPacketBuilder.SACN_PORT;
 
 public class DMXIPDiscoverTool {
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXIPDiscoverTool.class.getName());
@@ -107,6 +107,6 @@ public class DMXIPDiscoverTool {
         String name = new String(data, 26, 18).trim(); // Short name
         int universeCount = data[173] & 0xFF; // Number of ports
 
-        return new DMXIPDevice(packet.getAddress(), Protocol.ARTNET, name, universeCount);
+        return new DMXIPDevice(packet.getAddress(), name, Protocol.ARTNET, universeCount);
     }
 }

@@ -1,8 +1,11 @@
-package be.codewriter.dmx512.controller.ip;
+package be.codewriter.dmx512.controller.ip.builder;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+/**
+ * Builder to create IP packages containing DMX512 data using the SACP (Streaming ACP) protocol.
+ */
 public class SACNPacketBuilder {
 
     public static final int SACN_PORT = 5568;
@@ -18,14 +21,14 @@ public class SACNPacketBuilder {
     private byte[] cid;
     private String sourceName;
 
+    /**
+     * Constructor by name
+     *
+     * @param sourceName source name
+     */
     public SACNPacketBuilder(String sourceName) {
         this.sourceName = sourceName;
         this.cid = generateCID();
-    }
-
-    public SACNPacketBuilder(String sourceName, UUID uuid) {
-        this.sourceName = sourceName;
-        this.cid = uuidToBytes(uuid);
     }
 
     /**

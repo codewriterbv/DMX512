@@ -1,10 +1,10 @@
 package be.codewriter.dmx512.controller;
 
 import be.codewriter.dmx512.MotherObjects;
-import be.codewriter.dmx512.controller.ip.ArtNetPacketBuilder;
 import be.codewriter.dmx512.controller.ip.DMXIPController;
+import be.codewriter.dmx512.controller.ip.Protocol;
+import be.codewriter.dmx512.controller.ip.builder.ArtNetPacketBuilder;
 import be.codewriter.dmx512.model.DMXUniverse;
-import be.codewriter.dmx512.network.Protocol;
 import be.codewriter.dmx512.tool.HexTool;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

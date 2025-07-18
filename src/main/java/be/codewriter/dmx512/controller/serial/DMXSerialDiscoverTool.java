@@ -1,6 +1,5 @@
 package be.codewriter.dmx512.controller.serial;
 
-import be.codewriter.dmx512.serial.SerialConnection;
 import com.fazecast.jSerialComm.SerialPort;
 
 import java.util.Arrays;

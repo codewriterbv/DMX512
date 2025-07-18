@@ -5,7 +5,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-// Root fixture record
+/**
+ * OFL definition of a fixture
+ *
+ * @param name              name
+ * @param categories        list of categories
+ * @param meta              {@link Meta}
+ * @param links             {@link Links}
+ * @param physical          {@link Physical}
+ * @param wheels            map of name and {@link Wheel}
+ * @param availableChannels map of name and {@link Channel}
+ * @param modes             list of {@link Mode}
+ */
 public record Fixture(
         String name,
         List<String> categories,

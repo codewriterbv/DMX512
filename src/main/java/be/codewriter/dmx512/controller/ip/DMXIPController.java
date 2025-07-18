@@ -1,9 +1,10 @@
 package be.codewriter.dmx512.controller.ip;
 
 import be.codewriter.dmx512.controller.DMXController;
-import be.codewriter.dmx512.controller.change.DMXChangeMessage;
+import be.codewriter.dmx512.controller.change.DMXStatusChangeMessage;
+import be.codewriter.dmx512.controller.ip.builder.ArtNetPacketBuilder;
+import be.codewriter.dmx512.controller.ip.builder.SACNPacketBuilder;
 import be.codewriter.dmx512.model.DMXUniverse;
-import be.codewriter.dmx512.network.Protocol;
 import be.codewriter.dmx512.tool.HexTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +16,8 @@ import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
 
-import static be.codewriter.dmx512.controller.ip.ArtNetPacketBuilder.ART_NET_PORT;
-import static be.codewriter.dmx512.controller.ip.SACNPacketBuilder.SACN_PORT;
+import static be.codewriter.dmx512.controller.ip.builder.ArtNetPacketBuilder.ART_NET_PORT;
+import static be.codewriter.dmx512.controller.ip.builder.SACNPacketBuilder.SACN_PORT;
 
 /**
  * DMX IP Controller.
@@ -68,12 +69,12 @@ public class DMXIPController implements DMXController {
         try {
             this.socket = new DatagramSocket();
             this.connected = true;
-            notifyListeners(DMXChangeMessage.CONNECTED);
+            notifyListeners(DMXStatusChangeMessage.CONNECTED);
             startListening();
             return true;
         } catch (IOException e) {
             this.connected = false;
-            notifyListeners(DMXChangeMessage.DISCONNECTED);
+            notifyListeners(DMXStatusChangeMessage.DISCONNECTED);
             return false;
         }
     }
@@ -104,7 +105,7 @@ public class DMXIPController implements DMXController {
             socket.close();
         }
         connected = false;
-        notifyListeners(DMXChangeMessage.DISCONNECTED);
+        notifyListeners(DMXStatusChangeMessage.DISCONNECTED);
     }
 
     @Override
@@ -135,7 +136,7 @@ public class DMXIPController implements DMXController {
     private void handleDisconnection() {
         if (connected) {
             connected = false;
-            notifyListeners(DMXChangeMessage.DISCONNECTED);
+            notifyListeners(DMXStatusChangeMessage.DISCONNECTED);
 
             if (autoReconnect && reconnectAttempts < maxReconnectAttempts) {
                 LOGGER.info("Attempting to reconnect... (attempt {}/{})", reconnectAttempts + 1, maxReconnectAttempts);
@@ -178,7 +179,7 @@ public class DMXIPController implements DMXController {
             this.connected = true;
             this.listening = true;
 
-            notifyListeners(DMXChangeMessage.CONNECTED);
+            notifyListeners(DMXStatusChangeMessage.CONNECTED);
             startListening();
 
             return true;

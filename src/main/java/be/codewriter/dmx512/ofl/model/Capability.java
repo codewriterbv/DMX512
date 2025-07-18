@@ -5,6 +5,21 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.List;
 
+/**
+ * OFL definition of a capability
+ *
+ * @param type            {@link CapabilityType}
+ * @param angleStart      start angle
+ * @param angleEnd        end angle
+ * @param speedStart      speed start
+ * @param speedEnd        speed end
+ * @param dmxRange        list of dmx range s
+ * @param slotNumber      slot number
+ * @param slotNumberStart slot number start
+ * @param slotNumberEnd   slot number end
+ * @param effectName      effect name
+ * @param shutterEffect   shutter effect
+ */
 public record Capability(
         @JsonDeserialize(using = CapabilityTypeDeserializer.class)
         CapabilityType type,
