@@ -19,6 +19,10 @@ import java.io.InputStream;
 public class Main {
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class.getName());
 
+    private Main() {
+        // Hide constructor
+    }
+
     /**
      * Run the demo/test application
      *

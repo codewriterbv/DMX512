@@ -29,22 +29,40 @@ public class DMXIPController implements DMXController {
     private final InetAddress address;
     private final Protocol protocol;
     private final int port;
+    private final long reconnectDelayMs = 5000; // 5 seconds
+    private final int maxReconnectAttempts = 10;
     private boolean listening = true;
     private DatagramSocket socket;
     private boolean connected = false;
     private volatile boolean autoReconnect = true;
-    private long reconnectDelayMs = 5000; // 5 seconds
-    private int maxReconnectAttempts = 10;
     private int reconnectAttempts = 0;
 
+    /**
+     * Constructor for an IP controller with only the IP address, using the ArtNet protocol
+     *
+     * @param address IP address
+     */
     public DMXIPController(InetAddress address) {
         this(address, Protocol.ARTNET, ART_NET_PORT);
     }
 
+    /**
+     * Constructor for an IP controller with an IP address and protocol, using the default port for the protocol
+     *
+     * @param address  IP address
+     * @param protocol {@link Protocol}
+     */
     public DMXIPController(InetAddress address, Protocol protocol) {
         this(address, protocol, (protocol == Protocol.ARTNET) ? ART_NET_PORT : SACN_PORT);
     }
 
+    /**
+     * Constructor for an IP controller with an IP address, protocol, and port
+     *
+     * @param address  IP address
+     * @param protocol {@link Protocol}
+     * @param port     port
+     */
     public DMXIPController(InetAddress address, Protocol protocol, int port) {
         this.address = address;
         this.protocol = protocol;
@@ -228,10 +246,23 @@ public class DMXIPController implements DMXController {
         listenerThread.start();
     }
 
+    /**
+     * Create DMX data packet for the given universe
+     *
+     * @param universe {@link DMXUniverse}
+     * @return byte array containing header and footer for the selected protocol
+     */
     public byte[] createDataPacket(DMXUniverse universe) {
         return createDataPacket(universe.getId(), universe.getData());
     }
 
+    /**
+     * Create DMX data packet for the given universe ID with the given DMX data
+     *
+     * @param universe {@link DMXUniverse}
+     * @param data     DMX data byte array
+     * @return byte array containing header and footer for the selected protocol
+     */
     public byte[] createDataPacket(int universe, byte[] data) {
         if (this.protocol == Protocol.ARTNET) {
             var builder = new ArtNetPacketBuilder();
@@ -241,17 +272,4 @@ public class DMXIPController implements DMXController {
             return builder.createSACNPacket(data, universe);
         }
     }
-
-    public void setAutoReconnect(boolean autoReconnect) {
-        this.autoReconnect = autoReconnect;
-    }
-
-    public void setReconnectDelay(long delayMs) {
-        this.reconnectDelayMs = delayMs;
-    }
-
-    public void setMaxReconnectAttempts(int maxAttempts) {
-        this.maxReconnectAttempts = maxAttempts;
-    }
-
 }

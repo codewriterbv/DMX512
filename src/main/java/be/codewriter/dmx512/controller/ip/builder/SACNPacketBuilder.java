@@ -120,6 +120,7 @@ public class SACNPacketBuilder {
      *
      * @param dmxData  data
      * @param universe universe id
+     * @return byte array with sACN packet
      */
     public byte[] createSACNPacket(byte[] dmxData, int universe) {
         return createSACNPacket(dmxData, universe, 100);

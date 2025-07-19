@@ -8,9 +8,17 @@ import java.util.logging.Logger;
  * Builder to create IP packages containing DMX512 data using the ArtNet protocol.
  */
 public class ArtNetPacketBuilder {
-    // Art-Net OpCodes
+    /**
+     * Art-Net OpCode for a poll message
+     */
     public static final short OP_POLL = (short) 0x2000;
+    /**
+     * Art-Net OpCode for a DMX message
+     */
     public static final short OP_DMX = (short) 0x5000;
+    /**
+     * Default port for the ArtNet protocol
+     */
     public static final int ART_NET_PORT = 6454;
     private static final Logger LOGGER = Logger.getLogger(ArtNetPacketBuilder.class.getName());
     // Art-Net Constants

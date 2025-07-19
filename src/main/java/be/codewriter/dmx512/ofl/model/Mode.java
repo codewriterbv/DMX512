@@ -14,7 +14,16 @@ public record Mode(
         String shortName,
         List<String> channels
 ) {
+    /**
+     * Get the channel index for the given key (case independant)
+     *
+     * @param key key (name) of the channel
+     * @return index or -1 if not found
+     */
     public int getChannelIndex(String key) {
+        if (channels == null || channels.isEmpty()) {
+            return -1;
+        }
         var counter = 0;
         for (var channel : channels) {
             if (clean(channel).equalsIgnoreCase(clean(key))) {

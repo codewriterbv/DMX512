@@ -23,10 +23,22 @@ public class DMXIPDiscoverTool {
         // Hide constructor
     }
 
+    /**
+     * Discover the connected IP-to-DMX devices using an ArtNet discover package.
+     *
+     * @return list of {@link DMXIPDevice}
+     */
     public static List<DMXIPDevice> discoverDevices() {
         return discoverDevices(Protocol.ARTNET, 1);
     }
 
+    /**
+     * Discover the connected IP-to-DMX devices using the given protocol.
+     *
+     * @param protocol {@link Protocol}
+     * @param universe universe ID
+     * @return list of {@link DMXIPDevice}
+     */
     public static List<DMXIPDevice> discoverDevices(Protocol protocol, int universe) {
         List<DMXIPDevice> DMXIPDevices = new ArrayList<>();
         Set<InetAddress> localAddresses = new HashSet<>();

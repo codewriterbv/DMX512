@@ -25,6 +25,11 @@ public class DMXSerialController implements DMXController {
     private volatile boolean isRunning = false;
     private Thread transmitThread;
 
+    /**
+     * Constructor for a serial (USB) controller on the given port name.
+     *
+     * @param portName serial (USB) port name
+     */
     public DMXSerialController(String portName) {
         this.portName = portName;
 
@@ -120,7 +125,7 @@ public class DMXSerialController implements DMXController {
                     outputStream.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.error("Failed to close output stream: {}", e.getMessage());
             } finally {
                 if (serialPort != null) {
                     serialPort.closePort();
@@ -184,6 +189,9 @@ public class DMXSerialController implements DMXController {
         // System.arraycopy(data, 0, universe, 0, data.length);
     }
 
+    /**
+     * Send the data continuously
+     */
     public void sendData() {
         // Start continuous DMX transmission in background
         if (transmitThread == null || !transmitThread.isAlive()) {
@@ -194,6 +202,9 @@ public class DMXSerialController implements DMXController {
         }
     }
 
+    /**
+     * Data transmitter to the serial connection
+     */
     private void transmitDMXLoop() {
         while (isRunning && serialPort.isOpen()) {
             try {
@@ -216,7 +227,7 @@ public class DMXSerialController implements DMXController {
                 Thread.sleep(25); // 25ms = 40Hz
             } catch (Exception e) {
                 isRunning = false;
-                e.printStackTrace();
+                LOGGER.error("Failed to send DMX data: {}", e.getMessage());
             }
         }
     }
