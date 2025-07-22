@@ -2,6 +2,7 @@ package be.codewriter.dmx512.controller.serial;
 
 import be.codewriter.dmx512.controller.DMXController;
 import be.codewriter.dmx512.controller.change.DMXStatusChangeMessage;
+import be.codewriter.dmx512.controller.serial.builder.EnttecDMXUSBProBuilder;
 import be.codewriter.dmx512.model.DMXUniverse;
 import com.fazecast.jSerialComm.SerialPort;
 import org.slf4j.Logger;
@@ -16,21 +17,42 @@ import java.util.HexFormat;
  * Controls DMX lights over USB-to-DMX interface using jSerialComm.
  */
 public class DMXSerialController implements DMXController {
+    /**
+     * DMX start command
+     */
+    public static final int DMX_START_CODE = 0x00;
+    /**
+     * Maximum number of DMX channels
+     */
+    public static final int MAX_DMX_CHANNELS = 512;
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXSerialController.class.getName());
+    private static final int DMX_BREAK_TIME_US = 88;    // Minimum break time in microseconds
+    private static final int DMX_MAB_TIME_US = 8;       // Mark After Break time in microseconds
+    private static final int DMX_PACKET_TIME_US = 44;   // Time per DMX slot in microseconds
 
     private final String portName;
+    private final SerialProtocol protocol;
     private SerialPort serialPort;
     private OutputStream outputStream;
     private boolean connected = false;
-    private volatile boolean isRunning = false;
-    private Thread transmitThread;
 
     /**
-     * Constructor for a serial (USB) controller on the given port name.
+     * Constructor for a serial (USB) controller on the given port name with the Enttec protocol.
      *
      * @param portName serial (USB) port name
      */
     public DMXSerialController(String portName) {
+        this(SerialProtocol.ENTTEC_OPEN_DMX, portName);
+    }
+
+    /**
+     * Constructor for a serial (USB) controller on the given port name.
+     *
+     * @param protocol {@link SerialProtocol}
+     * @param portName serial (USB) port name
+     */
+    public DMXSerialController(SerialProtocol protocol, String portName) {
+        this.protocol = protocol;
         this.portName = portName;
 
         connect();
@@ -39,6 +61,11 @@ public class DMXSerialController implements DMXController {
     @Override
     public DMXControllerType getType() {
         return DMXControllerType.SERIAL;
+    }
+
+    @Override
+    public String getProtocolName() {
+        return protocol.name();
     }
 
     @Override
@@ -87,7 +114,6 @@ public class DMXSerialController implements DMXController {
             outputStream = serialPort.getOutputStream();
             connected = true;
             notifyListeners(DMXStatusChangeMessage.CONNECTED);
-            sendData();
             return true;
         } else {
             LOGGER.error("Failed to open port: {}", portName);
@@ -112,7 +138,174 @@ public class DMXSerialController implements DMXController {
             return;
         }
 
-        System.arraycopy(data, 0, universe, 0, data.length);
+        try {
+            switch (protocol) {
+                case OPEN_DMX_USB:
+                    sendOpenDMXUSB(data);
+                    break;
+                case FTDI_CHIP_DIRECT:
+                    sendFTDIChipDirect(data);
+                    break;
+                case ENTTEC_OPEN_DMX:
+                    sendEnttecOpenDMX(data);
+                    break;
+                case GENERIC_SERIAL:
+                    sendGenericSerial(data);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unsupported protocol type: " + protocol);
+            }
+        } catch (IOException e) {
+            LOGGER.error("Could not send DMX message: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Open DMX USB protocol implementation
+     * Simple serial transmission with break and MAB timing
+     */
+    private void sendOpenDMXUSB(byte[] dmxData) throws IOException {
+        // Send break (low signal)
+        sendBreak();
+
+        // Send Mark After Break (MAB) - high signal
+        sendMAB();
+
+        // Send start code
+        outputStream.write(DMX_START_CODE);
+
+        // Send DMX data
+        outputStream.write(dmxData);
+
+        // Pad to 512 channels if needed
+        if (dmxData.length < MAX_DMX_CHANNELS) {
+            byte[] padding = new byte[MAX_DMX_CHANNELS - dmxData.length];
+            outputStream.write(padding);
+        }
+
+        outputStream.flush();
+    }
+
+    /**
+     * Enttec Open DMX USB protocol (FTDI-based)
+     * Similar to Open DMX USB but with specific timing requirements
+     */
+    private void sendEnttecOpenDMX(byte[] dmxData) throws IOException {
+        // Enttec Open DMX USB uses a simple serial protocol
+        // Send break by writing to serial port with specific timing
+        sendBreak();
+
+        // Short delay for Mark After Break
+        microDelay(DMX_MAB_TIME_US);
+
+        // Send packet
+        outputStream.write(EnttecDMXUSBProBuilder.createEnttecDMXPacket(dmxData));
+        outputStream.flush();
+    }
+
+
+    /**
+     * FTDI chip direct communication
+     * Uses FTDI-specific commands for break generation
+     */
+    private void sendFTDIChipDirect(byte[] dmxData) throws IOException {
+        byte FTDI_SIO_SET_BREAK_ON = (byte) 0x23;
+        byte FTDI_SIO_SET_BREAK_OFF = (byte) 0x24;
+
+        // Set break condition
+        outputStream.write(FTDI_SIO_SET_BREAK_ON);
+        microDelay(DMX_BREAK_TIME_US);
+
+        // Clear break condition
+        outputStream.write(FTDI_SIO_SET_BREAK_OFF);
+        microDelay(DMX_MAB_TIME_US);
+
+        // Send start code
+        outputStream.write(DMX_START_CODE);
+
+        // Send DMX data with inter-slot timing
+        for (int i = 0; i < dmxData.length; i++) {
+            outputStream.write(dmxData[i]);
+            if (i < dmxData.length - 1) {
+                microDelay(DMX_PACKET_TIME_US);
+            }
+        }
+
+        // Pad to 512 channels if needed
+        for (int i = dmxData.length; i < MAX_DMX_CHANNELS; i++) {
+            outputStream.write(0);
+            if (i < MAX_DMX_CHANNELS - 1) {
+                microDelay(DMX_PACKET_TIME_US);
+            }
+        }
+
+        outputStream.flush();
+    }
+
+    /**
+     * Generic serial-based DMX transmission
+     * Most basic implementation for simple FTDI-based devices
+     */
+    private void sendGenericSerial(byte[] dmxData) throws IOException {
+        // Simple approach: just send the data with start code
+        outputStream.write(DMX_START_CODE);
+        outputStream.write(dmxData);
+        outputStream.flush();
+    }
+
+    /**
+     * Sends a DMX break signal
+     * This is a simplified implementation - actual break generation
+     * depends on the serial port configuration
+     */
+    private void sendBreak() throws IOException {
+        if (serialPort.setBreak()) {
+            microDelay(DMX_BREAK_TIME_US);
+            serialPort.clearBreak();
+        } else {
+            // Fallback: temporarily change baud rate for break timing
+            int originalBaud = serialPort.getBaudRate();
+            serialPort.setBaudRate(90000); // Lower baud rate
+            outputStream.write(0x00);
+            outputStream.flush();
+            microDelay(DMX_BREAK_TIME_US);
+            serialPort.setBaudRate(originalBaud);
+        }
+    }
+
+    /**
+     * Sends Mark After Break signal
+     */
+    private void sendMAB() throws IOException {
+        // MAB is typically handled by the serial port returning to idle state
+        microDelay(DMX_MAB_TIME_US);
+    }
+
+    /**
+     * Microsecond delay implementation
+     * Note: Java's timing resolution is limited, this is best-effort
+     */
+    private void microDelay(int microseconds) {
+        if (microseconds <= 0) return;
+
+        long nanos = microseconds * 1000L;
+        long startTime = System.nanoTime();
+
+        // Busy wait for very short delays
+        if (nanos < 10000) { // Less than 10ms
+            while (System.nanoTime() - startTime < nanos) {
+                // Busy wait
+            }
+        } else {
+            // Use Thread.sleep for longer delays
+            try {
+                long millis = nanos / 1000000;
+                int remainingNanos = (int) (nanos % 1000000);
+                Thread.sleep(millis, remainingNanos);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     /**
@@ -144,93 +337,4 @@ public class DMXSerialController implements DMXController {
     public boolean isConnected() {
         return connected && serialPort != null && serialPort.isOpen();
     }
-
-    /**
-     * Send the given raw data to the DMX interface.
-     */
-    private void sendData(byte[] data) {
-        // Send DMX break
-        /*serialPort.setBreak();
-
-        try {
-            Thread.sleep(1); // Break duration (1ms)
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return;
-        }
-
-        // Clear DMX break
-        serialPort.clearBreak();
-
-        try {
-            Thread.sleep(1); // Mark After Break (MAB) duration
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return;
-        }*/
-
-
-        // Send DMX data
-        /*try {
-            outputStream.write(new byte[]{(byte) 0});
-            Thread.sleep(10);
-
-
-            outputStream.write(new byte[]{(byte) 1});
-            Thread.sleep(10);
-
-            LOGGER.info("Sending DMX data: {}", HexFormat.of().formatHex(data));
-            outputStream.write(data);
-            outputStream.flush();
-        } catch (Exception e) {
-            LOGGER.error("Failed to send DMX data: {}", e.getMessage());
-        }*/
-
-        // System.arraycopy(data, 0, universe, 0, data.length);
-    }
-
-    /**
-     * Send the data continuously
-     */
-    public void sendData() {
-        // Start continuous DMX transmission in background
-        if (transmitThread == null || !transmitThread.isAlive()) {
-            isRunning = true;
-            transmitThread = new Thread(this::transmitDMXLoop);
-            transmitThread.setDaemon(true);
-            transmitThread.start();
-        }
-    }
-
-    /**
-     * Data transmitter to the serial connection
-     */
-    private void transmitDMXLoop() {
-        while (isRunning && serialPort.isOpen()) {
-            try {
-                // Send DMX break (0.0V) for at least 88 microseconds
-                serialPort.setBreak();
-                Thread.sleep(1); // 1ms is plenty for a break
-
-                // Send DMX mark after break (1.0V) for at least 8 microseconds
-                serialPort.clearBreak();
-                Thread.sleep(1); // 1ms is plenty for mark after break
-
-                // Start code (0) + DMX data
-                serialPort.getOutputStream().write(0); // Start code
-                // TODO serialPort.getOutputStream().write(universe);
-                serialPort.getOutputStream().flush();
-
-                // TODO LOGGER.info("Sending DMX data: {}", HexFormat.of().formatHex(universe));
-
-                // DMX refresh rate (typically 40Hz)
-                Thread.sleep(25); // 25ms = 40Hz
-            } catch (Exception e) {
-                isRunning = false;
-                LOGGER.error("Failed to send DMX data: {}", e.getMessage());
-            }
-        }
-    }
-
-
 }

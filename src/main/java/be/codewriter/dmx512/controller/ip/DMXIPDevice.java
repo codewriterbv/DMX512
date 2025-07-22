@@ -8,13 +8,13 @@ import java.net.InetAddress;
  *
  * @param address       network address of the interface
  * @param name          name of the interface
- * @param protocol      {@link Protocol}
+ * @param IPProtocol    {@link IPProtocol}
  * @param universeCount universe count
  */
 public record DMXIPDevice(
         InetAddress address,
         String name,
-        Protocol protocol,
+        IPProtocol IPProtocol,
         int universeCount) {
     /**
      * Get the network address
@@ -37,10 +37,10 @@ public record DMXIPDevice(
     /**
      * Get the protocol
      *
-     * @return {@link Protocol}
+     * @return {@link IPProtocol}
      */
-    public Protocol getProtocol() {
-        return protocol();
+    public IPProtocol getProtocol() {
+        return IPProtocol();
     }
 
     /**

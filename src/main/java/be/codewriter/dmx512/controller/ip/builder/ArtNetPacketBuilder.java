@@ -44,7 +44,7 @@ public class ArtNetPacketBuilder {
      * @param net      Net number (0-127)
      * @return Complete Art-Net packet ready for transmission
      */
-    public byte[] createArtDMXPacket(byte[] dmxData, int universe, int subnet, int net) {
+    public byte[] createArtNetDMXPacket(byte[] dmxData, int universe, int subnet, int net) {
         if (dmxData == null || dmxData.length == 0 || dmxData.length > 512) {
             throw new IllegalArgumentException("DMX data must be 1-512 bytes");
         }
@@ -118,8 +118,8 @@ public class ArtNetPacketBuilder {
      * @param universe universe id
      * @return byte array containing the full ArtNet package
      */
-    public byte[] createArtDMXPacket(byte[] dmxData, int universe) {
-        return createArtDMXPacket(dmxData, universe, 0, 0);
+    public byte[] createArtNetDMXPacket(byte[] dmxData, int universe) {
+        return createArtNetDMXPacket(dmxData, universe, 0, 0);
     }
 
     /**

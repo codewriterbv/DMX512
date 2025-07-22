@@ -2,7 +2,7 @@ package be.codewriter.dmx512.controller;
 
 import be.codewriter.dmx512.MotherObjects;
 import be.codewriter.dmx512.controller.ip.DMXIPController;
-import be.codewriter.dmx512.controller.ip.Protocol;
+import be.codewriter.dmx512.controller.ip.IPProtocol;
 import be.codewriter.dmx512.controller.ip.builder.ArtNetPacketBuilder;
 import be.codewriter.dmx512.model.DMXUniverse;
 import be.codewriter.dmx512.tool.HexTool;
@@ -54,7 +54,7 @@ class DMXIPControllerTest {
     @Disabled("SACN is todo...")
     void shouldHaveValidSACNDataFromBytes() throws UnknownHostException {
         var data = new byte[]{(byte) 0x01, (byte) 0x02, (byte) 0x03};
-        DMXIPController controller = new DMXIPController(InetAddress.getByName("127.0.0.1"), Protocol.SACN);
+        DMXIPController controller = new DMXIPController(InetAddress.getByName("127.0.0.1"), IPProtocol.SACN);
         var poll = controller.createDataPacket(1, data);
         assertEquals("41 72 74 2D 4E 65 74 00 00 50 00 0E 00 00 00 00 00 03 01 02 03", HexTool.toHexString(poll), "Art-Net Data from bytes");
     }

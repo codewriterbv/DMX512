@@ -3,7 +3,7 @@ package be.codewriter.dmx512.controller.ip;
 /**
  * Available IP protocol types
  */
-public enum Protocol {
+public enum IPProtocol {
     /**
      * ArtNet protocol
      */

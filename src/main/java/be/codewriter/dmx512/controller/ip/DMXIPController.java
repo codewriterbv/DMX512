@@ -27,7 +27,7 @@ public class DMXIPController implements DMXController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXIPController.class.getName());
 
     private final InetAddress address;
-    private final Protocol protocol;
+    private final IPProtocol protocol;
     private final int port;
     private final long reconnectDelayMs = 5000; // 5 seconds
     private final int maxReconnectAttempts = 10;
@@ -43,27 +43,27 @@ public class DMXIPController implements DMXController {
      * @param address IP address
      */
     public DMXIPController(InetAddress address) {
-        this(address, Protocol.ARTNET, ART_NET_PORT);
+        this(address, IPProtocol.ARTNET, ART_NET_PORT);
     }
 
     /**
      * Constructor for an IP controller with an IP address and protocol, using the default port for the protocol
      *
      * @param address  IP address
-     * @param protocol {@link Protocol}
+     * @param protocol {@link IPProtocol}
      */
-    public DMXIPController(InetAddress address, Protocol protocol) {
-        this(address, protocol, (protocol == Protocol.ARTNET) ? ART_NET_PORT : SACN_PORT);
+    public DMXIPController(InetAddress address, IPProtocol protocol) {
+        this(address, protocol, (protocol == IPProtocol.ARTNET) ? ART_NET_PORT : SACN_PORT);
     }
 
     /**
      * Constructor for an IP controller with an IP address, protocol, and port
      *
      * @param address  IP address
-     * @param protocol {@link Protocol}
+     * @param protocol {@link IPProtocol}
      * @param port     port
      */
-    public DMXIPController(InetAddress address, Protocol protocol, int port) {
+    public DMXIPController(InetAddress address, IPProtocol protocol, int port) {
         this.address = address;
         this.protocol = protocol;
         this.port = port;
@@ -74,6 +74,11 @@ public class DMXIPController implements DMXController {
     @Override
     public DMXControllerType getType() {
         return DMXControllerType.IP;
+    }
+
+    @Override
+    public String getProtocolName() {
+        return protocol.name();
     }
 
     @Override
@@ -207,7 +212,6 @@ public class DMXIPController implements DMXController {
         }
     }
 
-
     private void startListening() {
         var listenerThread = new Thread(() -> {
             byte[] receiveBuffer = new byte[1024]; // Adjust buffer size as needed
@@ -264,9 +268,9 @@ public class DMXIPController implements DMXController {
      * @return byte array containing header and footer for the selected protocol
      */
     public byte[] createDataPacket(int universe, byte[] data) {
-        if (this.protocol == Protocol.ARTNET) {
+        if (this.protocol == IPProtocol.ARTNET) {
             var builder = new ArtNetPacketBuilder();
-            return builder.createArtDMXPacket(data, universe);
+            return builder.createArtNetDMXPacket(data, universe);
         } else {
             var builder = new SACNPacketBuilder("");
             return builder.createSACNPacket(data, universe);

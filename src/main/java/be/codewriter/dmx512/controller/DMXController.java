@@ -25,6 +25,13 @@ public interface DMXController {
     DMXControllerType getType();
 
     /**
+     * Get the name of the protocol being used for the communication
+     *
+     * @return name of the protocal used by the controller
+     */
+    String getProtocolName();
+
+    /**
      * Get the address of the controller
      *
      * @return address

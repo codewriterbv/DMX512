@@ -29,17 +29,17 @@ public class DMXIPDiscoverTool {
      * @return list of {@link DMXIPDevice}
      */
     public static List<DMXIPDevice> discoverDevices() {
-        return discoverDevices(Protocol.ARTNET, 1);
+        return discoverDevices(IPProtocol.ARTNET, 1);
     }
 
     /**
      * Discover the connected IP-to-DMX devices using the given protocol.
      *
-     * @param protocol {@link Protocol}
-     * @param universe universe ID
+     * @param IPProtocol {@link IPProtocol}
+     * @param universe   universe ID
      * @return list of {@link DMXIPDevice}
      */
-    public static List<DMXIPDevice> discoverDevices(Protocol protocol, int universe) {
+    public static List<DMXIPDevice> discoverDevices(IPProtocol IPProtocol, int universe) {
         List<DMXIPDevice> DMXIPDevices = new ArrayList<>();
         Set<InetAddress> localAddresses = new HashSet<>();
 
@@ -50,8 +50,8 @@ public class DMXIPDiscoverTool {
             }
 
             // Send Art-Net poll packet
-            byte[] pollPacket = createDetectPacket(protocol, universe);
-            int port = protocol == Protocol.ARTNET ? ART_NET_PORT : SACN_PORT;
+            byte[] pollPacket = createDetectPacket(IPProtocol, universe);
+            int port = IPProtocol == be.codewriter.dmx512.controller.ip.IPProtocol.ARTNET ? ART_NET_PORT : SACN_PORT;
             DatagramPacket packet = new DatagramPacket(
                     pollPacket,
                     pollPacket.length,
@@ -98,8 +98,8 @@ public class DMXIPDiscoverTool {
         return DMXIPDevices;
     }
 
-    private static byte[] createDetectPacket(Protocol protocol, int universe) {
-        if (protocol == Protocol.ARTNET) {
+    private static byte[] createDetectPacket(IPProtocol IPProtocol, int universe) {
+        if (IPProtocol == be.codewriter.dmx512.controller.ip.IPProtocol.ARTNET) {
             var builder = new ArtNetPacketBuilder();
             return builder.createArtPollPacket();
         } else {
@@ -122,6 +122,6 @@ public class DMXIPDiscoverTool {
         String name = new String(data, 26, 18).trim(); // Short name
         int universeCount = data[173] & 0xFF; // Number of ports
 
-        return new DMXIPDevice(packet.getAddress(), name, Protocol.ARTNET, universeCount);
+        return new DMXIPDevice(packet.getAddress(), name, IPProtocol.ARTNET, universeCount);
     }
 }
