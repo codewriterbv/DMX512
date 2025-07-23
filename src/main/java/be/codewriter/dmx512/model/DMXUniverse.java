@@ -67,7 +67,7 @@ public class DMXUniverse {
     /**
      * Get the clients of the given type of fixture
      *
-     * @param fixture
+     * @param fixture {@link Fixture}
      * @return list of {@link DMXClient}
      */
     public List<DMXClient> getFixtureClients(Fixture fixture) {
