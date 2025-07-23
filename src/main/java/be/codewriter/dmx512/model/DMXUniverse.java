@@ -1,5 +1,7 @@
 package be.codewriter.dmx512.model;
 
+import be.codewriter.dmx512.ofl.model.Fixture;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,6 +44,61 @@ public class DMXUniverse {
         }
         this.id = id;
         this.clients = clients;
+    }
+
+    /**
+     * Add a client to the list
+     *
+     * @param client {@link DMXClient}
+     */
+    public void addClient(DMXClient client) {
+        this.clients.add(client);
+    }
+
+    /**
+     * Get all the clients
+     *
+     * @return list of {@link DMXClient}
+     */
+    public List<DMXClient> getClients() {
+        return this.clients;
+    }
+
+    /**
+     * Get the clients of the given type of fixture
+     *
+     * @param fixture
+     * @return list of {@link DMXClient}
+     */
+    public List<DMXClient> getFixtureClients(Fixture fixture) {
+        return this.clients.stream()
+                .filter(c -> c.getFixture() == fixture)
+                .toList();
+    }
+
+    /**
+     * Update the value for the given channel of all the clients which have the channel with the given name
+     *
+     * @param key   channel name
+     * @param value new value
+     */
+    public void update(String key, byte value) {
+        this.clients.stream()
+                .filter(c -> c.hasChannel(key))
+                .forEach(c -> c.setValue(key, value));
+    }
+
+    /**
+     * Update the value for the given channel of the clients of the given fixture type
+     *
+     * @param fixture {@link Fixture}
+     * @param key     channel name
+     * @param value   new value
+     */
+    public void updateFixtures(Fixture fixture, String key, byte value) {
+        this.clients.stream()
+                .filter(c -> c.getFixture() == fixture && c.hasChannel(key))
+                .forEach(c -> c.setValue(key, value));
     }
 
     /**
