@@ -5,6 +5,7 @@ import be.codewriter.dmx512.controller.ip.DMXIPController;
 import be.codewriter.dmx512.controller.ip.DMXIPDiscoverTool;
 import be.codewriter.dmx512.controller.serial.DMXSerialController;
 import be.codewriter.dmx512.controller.serial.DMXSerialDiscoverTool;
+import be.codewriter.dmx512.controller.serial.SerialProtocol;
 import be.codewriter.dmx512.model.DMXClient;
 import be.codewriter.dmx512.model.DMXUniverse;
 import be.codewriter.dmx512.ofl.OFLParser;
@@ -110,7 +111,7 @@ public class Main {
                     port.getName(), port.getDescription(), port.getPath());
         }
 
-        var controller = new DMXSerialController("tty.usbserial-B003X1DH");
+        var controller = new DMXSerialController("tty.usbserial-B003X1DH", SerialProtocol.FTDI_CHIP_DIRECT);
         LOGGER.info("Controller initialized at {} with protocol {}, connected: {}",
                 controller.getAddress(), controller.getProtocolName(), controller.isConnected());
 

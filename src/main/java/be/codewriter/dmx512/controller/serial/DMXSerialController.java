@@ -42,7 +42,7 @@ public class DMXSerialController implements DMXController {
      * @param portName serial (USB) port name
      */
     public DMXSerialController(String portName) {
-        this(SerialProtocol.ENTTEC_OPEN_DMX, portName);
+        this(portName, SerialProtocol.ENTTEC_OPEN_DMX);
     }
 
     /**
@@ -51,9 +51,9 @@ public class DMXSerialController implements DMXController {
      * @param protocol {@link SerialProtocol}
      * @param portName serial (USB) port name
      */
-    public DMXSerialController(SerialProtocol protocol, String portName) {
-        this.protocol = protocol;
+    public DMXSerialController(String portName, SerialProtocol protocol) {
         this.portName = portName;
+        this.protocol = protocol;
 
         connect();
     }
