@@ -32,8 +32,8 @@ BAUD_RATE = 9600   # RS485 baud rate
 DMX_FIXTURES = [
     {"name": "PicoSpot 1", "address": 1, "channels": 11, "type": "Moving Head"},
     {"name": "PicoSpot 2", "address": 12, "channels": 11, "type": "Moving Head"},
-    {"name": "LED Par 1", "address": 23, "channels": 5, "type": "LED Par"},
-    {"name": "LED Par 2", "address": 28, "channels": 5, "type": "LED Par"},
+    {"name": "RGB LED 1", "address": 23, "channels": 5, "type": "Color Changer"},
+    {"name": "RGB LED 2", "address": 28, "channels": 5, "type": "Color Changer"},
 ]
 
 # LCD Driver Class (from lcd-test.py)
@@ -419,7 +419,7 @@ class ILI9341:
 }
 
         # Get character pattern or use space if not found
-        pattern = font_8x8.get(char.upper(), font_8x8[' '])
+        pattern = font_8x8.get(char, font_8x8[' '])
 
         # Draw character pixel by pixel
         for row in range(8):
