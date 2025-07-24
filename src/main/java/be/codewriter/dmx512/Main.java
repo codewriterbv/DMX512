@@ -4,6 +4,7 @@ import be.codewriter.dmx512.controller.DMXController;
 import be.codewriter.dmx512.controller.ip.DMXIPController;
 import be.codewriter.dmx512.controller.ip.DMXIPDiscoverTool;
 import be.codewriter.dmx512.controller.serial.DMXSerialController;
+import be.codewriter.dmx512.controller.serial.DMXSerialDiscoverTool;
 import be.codewriter.dmx512.model.DMXClient;
 import be.codewriter.dmx512.model.DMXUniverse;
 import be.codewriter.dmx512.ofl.OFLParser;
@@ -29,23 +30,24 @@ public class Main {
      * @param args command line arguments
      */
     public static void main(String[] args) {
-        runIpDemo();
-        // runSerialDemo();
+        // runIpDemo();
+        runSerialDemo();
     }
 
     private static void runIpDemo() {
         var devices = DMXIPDiscoverTool.discoverDevices();
+
         if (devices.isEmpty()) {
-            LOGGER.error("No DMX controllers found");
+            LOGGER.error("No IP DMX controllers found");
             return;
         }
 
         for (var device : devices) {
-            LOGGER.info("Found DMX controller {} at address:{}",
+            LOGGER.info("Found IP DMX controller {} at address:{}",
                     device.getName(), device.getAddress());
         }
 
-        var ipController = new DMXIPController(devices.getFirst().address());
+        var controller = new DMXIPController(devices.getFirst().address());
         int universe = 1;
 
         // Send raw data
@@ -64,28 +66,28 @@ public class Main {
         "Program Speed"
         */
         // Set all to 0
-        ipController.render(universe, new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        controller.render(universe, new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         sleep(2_000);
         // Set pan and tilt to 127
-        ipController.render(universe, new byte[]{(byte) 127, (byte) 127, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        controller.render(universe, new byte[]{(byte) 127, (byte) 127, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         sleep(2_000);
         // Set pan/tilt back to 0, color wheel to 44, and dimmer full open
-        ipController.render(universe, new byte[]{0, 0, 0, 0, 0, (byte) 44, 0, (byte) 255, 0, 0, 0});
+        controller.render(universe, new byte[]{0, 0, 0, 0, 0, (byte) 44, 0, (byte) 255, 0, 0, 0});
 
         sleep(5_000);
 
         // Use fixtures
-        runMinimalFixtureExample(ipController);
+        runMinimalFixtureExample(controller);
         sleep(5_000);
 
-        runDemoPartySpot(ipController);
+        runDemoPartySpot(controller);
         sleep(5_000);
 
-        runDemoPicoSpotMovingHead(ipController);
+        runDemoPicoSpotMovingHead(controller);
         sleep(5_000);
 
         // Close the connection to the controller
-        ipController.close();
+        controller.close();
     }
 
     private static void sleep(long millis) {
@@ -97,10 +99,61 @@ public class Main {
     }
 
     private static void runSerialDemo() {
-        var serialController = new DMXSerialController("tty.usbserial-B003X1DH");
-        runDemoPartySpot(serialController);
-        runDemoPicoSpotMovingHead(serialController);
-        serialController.close();
+        var ports = DMXSerialDiscoverTool.getAvailablePorts();
+        if (ports.isEmpty()) {
+            LOGGER.error("No serial ports found");
+            return;
+        }
+
+        for (var port : ports) {
+            LOGGER.info("Found serial ports {} ({}) at path:{}",
+                    port.getName(), port.getDescription(), port.getPath());
+        }
+
+        var controller = new DMXSerialController("tty.usbserial-B003X1DH");
+        LOGGER.info("Controller initialized at {} with protocol {}, connected: {}",
+                controller.getAddress(), controller.getProtocolName(), controller.isConnected());
+
+        int universe = 1;
+
+        // Send raw data
+        // The PicoSpot on DMX channel 1 expects 11 values
+        /*
+        "Pan",
+        "Tilt",
+        "Pan fine",
+        "Tilt fine",
+        "Pan/Tilt Speed",
+        "Color Wheel",
+        "Gobo Wheel",
+        "Dimmer",
+        "Shutter / Strobe",
+        "Program",
+        "Program Speed"
+        */
+        // Set all to 0
+        controller.render(universe, new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        sleep(2_000);
+        // Set pan and tilt to 127
+        controller.render(universe, new byte[]{(byte) 127, (byte) 127, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        sleep(2_000);
+        // Set pan/tilt back to 0, color wheel to 44, and dimmer full open
+        controller.render(universe, new byte[]{0, 0, 0, 0, 0, (byte) 44, 0, (byte) 255, 0, 0, 0});
+
+        sleep(5_000);
+
+        // Use fixtures
+        runMinimalFixtureExample(controller);
+        sleep(5_000);
+
+        runDemoPartySpot(controller);
+        sleep(5_000);
+
+        runDemoPicoSpotMovingHead(controller);
+        sleep(5_000);
+
+        // Close the connection to the controller
+        controller.close();
     }
 
     private static Fixture getFixturePartySpot() {

@@ -161,6 +161,36 @@ public class DMXSerialController implements DMXController {
     }
 
     /**
+     * Close the connection to the DMX interface
+     */
+    public void close() {
+        if (connected) {
+            try {
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            } catch (IOException e) {
+                LOGGER.error("Failed to close output stream: {}", e.getMessage());
+            } finally {
+                if (serialPort != null) {
+                    serialPort.closePort();
+                }
+                connected = false;
+                notifyListeners(DMXStatusChangeMessage.DISCONNECTED);
+            }
+        }
+    }
+
+    /**
+     * Check if the controller is connected
+     *
+     * @return true if connected
+     */
+    public boolean isConnected() {
+        return connected && serialPort != null && serialPort.isOpen();
+    }
+
+    /**
      * Open DMX USB protocol implementation
      * Simple serial transmission with break and MAB timing
      */
@@ -199,10 +229,13 @@ public class DMXSerialController implements DMXController {
         microDelay(DMX_MAB_TIME_US);
 
         // Send packet
-        outputStream.write(EnttecDMXUSBProBuilder.createEnttecDMXPacket(dmxData));
+        var enttecPacket = EnttecDMXUSBProBuilder.createEnttecDMXPacket(dmxData);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Enttec message: {}", HexFormat.of().formatHex(enttecPacket));
+        }
+        outputStream.write(enttecPacket);
         outputStream.flush();
     }
-
 
     /**
      * FTDI chip direct communication
@@ -306,35 +339,5 @@ public class DMXSerialController implements DMXController {
                 Thread.currentThread().interrupt();
             }
         }
-    }
-
-    /**
-     * Close the connection to the DMX interface
-     */
-    public void close() {
-        if (connected) {
-            try {
-                if (outputStream != null) {
-                    outputStream.close();
-                }
-            } catch (IOException e) {
-                LOGGER.error("Failed to close output stream: {}", e.getMessage());
-            } finally {
-                if (serialPort != null) {
-                    serialPort.closePort();
-                }
-                connected = false;
-                notifyListeners(DMXStatusChangeMessage.DISCONNECTED);
-            }
-        }
-    }
-
-    /**
-     * Check if the controller is connected
-     *
-     * @return true if connected
-     */
-    public boolean isConnected() {
-        return connected && serialPort != null && serialPort.isOpen();
     }
 }
