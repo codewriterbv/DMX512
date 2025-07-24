@@ -544,7 +544,7 @@ class DMXMonitor:
             self.tft.draw_text(addr_text, 10, y_pos + 13, 0x07FF, 0x0000, 1)  # Cyan
 
             # Channel labels
-            self.tft.draw_text("Channels:", 10, y_pos + 26, 0xF79E, 0x0000, 1)  # Orange
+            self.tft.draw_text("Data:", 10, y_pos + 26, 0xF79E, 0x0000, 1)  # Orange
 
             y_pos += 42
 
@@ -582,17 +582,17 @@ class DMXMonitor:
             data_y = y_pos + 27
 
             # Clear channel data area
-            self.tft.fill_rect(85, data_y, 230, 15, 0x0000)
+            self.tft.fill_rect(55, data_y, 230, 15, 0x0000)
 
             # Draw channel data
             if is_receiving:
                 channel_data = self.dmx_reader.get_fixture_data(fixture)
                 # Show more channels on wider screen
                 data_values = " ".join([f"{val:3d}" for val in channel_data[:8]])
-                self.tft.draw_text(data_values, 85, data_y, 0xFFFF, 0x0000, 1)  # White
+                self.tft.draw_text(data_values, 55, data_y, 0xFFFF, 0x0000, 1)  # White
             else:
                 placeholder_text = "-- " * fixture["channels"]
-                self.tft.draw_text(placeholder_text.rstrip(), 85, data_y, 0x7BEF, 0x0000, 1)  # Gray
+                self.tft.draw_text(placeholder_text.rstrip(), 55, data_y, 0x7BEF, 0x0000, 1)  # Gray
 
             y_pos += 42
 
