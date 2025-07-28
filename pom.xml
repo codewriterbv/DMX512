@@ -6,7 +6,7 @@
 
     <groupId>be.codewriter</groupId>
     <artifactId>dmx512</artifactId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>0.0.2</version>
 
     <name>DMX512</name>
     <description>Java library for the DMX512 protocol and Open Fixture Library</description>
