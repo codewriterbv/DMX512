@@ -1,7 +1,7 @@
 package be.codewriter.dmx512.controller.ip;
 
-import be.codewriter.dmx512.network.DMXIPDevice;
-import be.codewriter.dmx512.network.Protocol;
+import be.codewriter.dmx512.controller.ip.builder.ArtNetPacketBuilder;
+import be.codewriter.dmx512.controller.ip.builder.SACNPacketBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,9 +9,12 @@ import java.io.IOException;
 import java.net.*;
 import java.util.*;
 
-import static be.codewriter.dmx512.controller.ip.ArtNetPacketBuilder.ART_NET_PORT;
-import static be.codewriter.dmx512.controller.ip.SACNPacketBuilder.SACN_PORT;
+import static be.codewriter.dmx512.controller.ip.builder.ArtNetPacketBuilder.ART_NET_PORT;
+import static be.codewriter.dmx512.controller.ip.builder.SACNPacketBuilder.SACN_PORT;
 
+/**
+ * Tool to detect IP-to-DMX controllers
+ */
 public class DMXIPDiscoverTool {
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXIPDiscoverTool.class.getName());
     private static final long DISCOVER_TIMEOUT_MILLIS = 2_000;
@@ -20,11 +23,23 @@ public class DMXIPDiscoverTool {
         // Hide constructor
     }
 
+    /**
+     * Discover the connected IP-to-DMX devices using an ArtNet discover package.
+     *
+     * @return list of {@link DMXIPDevice}
+     */
     public static List<DMXIPDevice> discoverDevices() {
-        return discoverDevices(Protocol.ARTNET, 1);
+        return discoverDevices(IPProtocol.ARTNET, 1);
     }
 
-    public static List<DMXIPDevice> discoverDevices(Protocol protocol, int universe) {
+    /**
+     * Discover the connected IP-to-DMX devices using the given protocol.
+     *
+     * @param IPProtocol {@link IPProtocol}
+     * @param universe   universe ID
+     * @return list of {@link DMXIPDevice}
+     */
+    public static List<DMXIPDevice> discoverDevices(IPProtocol IPProtocol, int universe) {
         List<DMXIPDevice> DMXIPDevices = new ArrayList<>();
         Set<InetAddress> localAddresses = new HashSet<>();
 
@@ -35,8 +50,8 @@ public class DMXIPDiscoverTool {
             }
 
             // Send Art-Net poll packet
-            byte[] pollPacket = createDetectPacket(protocol, universe);
-            int port = protocol == Protocol.ARTNET ? ART_NET_PORT : SACN_PORT;
+            byte[] pollPacket = createDetectPacket(IPProtocol, universe);
+            int port = IPProtocol == be.codewriter.dmx512.controller.ip.IPProtocol.ARTNET ? ART_NET_PORT : SACN_PORT;
             DatagramPacket packet = new DatagramPacket(
                     pollPacket,
                     pollPacket.length,
@@ -83,8 +98,8 @@ public class DMXIPDiscoverTool {
         return DMXIPDevices;
     }
 
-    private static byte[] createDetectPacket(Protocol protocol, int universe) {
-        if (protocol == Protocol.ARTNET) {
+    private static byte[] createDetectPacket(IPProtocol IPProtocol, int universe) {
+        if (IPProtocol == be.codewriter.dmx512.controller.ip.IPProtocol.ARTNET) {
             var builder = new ArtNetPacketBuilder();
             return builder.createArtPollPacket();
         } else {
@@ -107,6 +122,6 @@ public class DMXIPDiscoverTool {
         String name = new String(data, 26, 18).trim(); // Short name
         int universeCount = data[173] & 0xFF; // Number of ports
 
-        return new DMXIPDevice(packet.getAddress(), Protocol.ARTNET, name, universeCount);
+        return new DMXIPDevice(packet.getAddress(), name, IPProtocol.ARTNET, universeCount);
     }
 }

@@ -54,7 +54,7 @@ class FixtureParserLedPartyTclTest {
         assertThat(physical.dimensions()).hasSize(3);
         assertThat(physical.weight()).isPositive();
         assertThat(physical.power()).isPositive();
-        assertThat(physical.DMXconnector()).isNotEmpty();
+        assertThat(physical.dmxConnector()).isNotEmpty();
         assertThat(physical.bulb()).isNotNull();
     }
 

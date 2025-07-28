@@ -1,6 +1,6 @@
 package be.codewriter.dmx512;
 
-import be.codewriter.dmx512.client.DMXClient;
+import be.codewriter.dmx512.model.DMXClient;
 import be.codewriter.dmx512.ofl.model.Channel;
 import be.codewriter.dmx512.ofl.model.Fixture;
 import be.codewriter.dmx512.ofl.model.Mode;
@@ -16,7 +16,7 @@ public class MotherObjects {
 
     public static DMXClient fiveChannelClient(byte red, byte green, byte blue, byte dimmer, byte effects, int startChannel) {
         var fixture = fiveChannelFixture();
-        var client = new DMXClient(fixture, fixture.modes().getFirst(), startChannel);
+        var client = new DMXClient(startChannel, fixture);
 
         client.setValue("Red", red);
         client.setValue("Green", green);
@@ -33,7 +33,7 @@ public class MotherObjects {
 
     public static DMXClient nineChannelClient(byte red, byte green, byte blue, byte dimmer, byte effects, byte pan, byte tilt, byte speed, byte gobo, int startChannel) {
         var fixture = nineChannelFixture();
-        var client = new DMXClient(fixture, fixture.modes().getFirst(), startChannel);
+        var client = new DMXClient(startChannel, fixture);
 
         client.setValue("Red", red);
         client.setValue("Green", green);

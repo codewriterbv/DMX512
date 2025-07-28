@@ -1,10 +1,10 @@
 package be.codewriter.dmx512.controller.ip;
 
-import be.codewriter.dmx512.client.DMXClient;
 import be.codewriter.dmx512.controller.DMXController;
-import be.codewriter.dmx512.controller.change.DMXChangeMessage;
-import be.codewriter.dmx512.helper.DMXMessage;
-import be.codewriter.dmx512.network.Protocol;
+import be.codewriter.dmx512.controller.change.DMXStatusChangeMessage;
+import be.codewriter.dmx512.controller.ip.builder.ArtNetPacketBuilder;
+import be.codewriter.dmx512.controller.ip.builder.SACNPacketBuilder;
+import be.codewriter.dmx512.model.DMXUniverse;
 import be.codewriter.dmx512.tool.HexTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,10 +15,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
-import java.util.List;
 
-import static be.codewriter.dmx512.controller.ip.ArtNetPacketBuilder.ART_NET_PORT;
-import static be.codewriter.dmx512.controller.ip.SACNPacketBuilder.SACN_PORT;
+import static be.codewriter.dmx512.controller.ip.builder.ArtNetPacketBuilder.ART_NET_PORT;
+import static be.codewriter.dmx512.controller.ip.builder.SACNPacketBuilder.SACN_PORT;
 
 /**
  * DMX IP Controller.
@@ -28,44 +27,58 @@ public class DMXIPController implements DMXController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXIPController.class.getName());
 
     private final InetAddress address;
-    private final Protocol protocol;
+    private final IPProtocol protocol;
     private final int port;
-    private final int universe;
+    private final long reconnectDelayMs = 5000; // 5 seconds
+    private final int maxReconnectAttempts = 10;
     private boolean listening = true;
     private DatagramSocket socket;
     private boolean connected = false;
     private volatile boolean autoReconnect = true;
-    private long reconnectDelayMs = 5000; // 5 seconds
-    private int maxReconnectAttempts = 10;
     private int reconnectAttempts = 0;
 
+    /**
+     * Constructor for an IP controller with only the IP address, using the ArtNet protocol
+     *
+     * @param address IP address
+     */
     public DMXIPController(InetAddress address) {
-        this(address, Protocol.ARTNET, ART_NET_PORT, 1);
+        this(address, IPProtocol.ARTNET, ART_NET_PORT);
     }
 
-    public DMXIPController(InetAddress address, Protocol protocol) {
-        this(address, protocol, 1);
+    /**
+     * Constructor for an IP controller with an IP address and protocol, using the default port for the protocol
+     *
+     * @param address  IP address
+     * @param protocol {@link IPProtocol}
+     */
+    public DMXIPController(InetAddress address, IPProtocol protocol) {
+        this(address, protocol, (protocol == IPProtocol.ARTNET) ? ART_NET_PORT : SACN_PORT);
     }
 
-    public DMXIPController(InetAddress address, Protocol protocol, int universe) {
-        this(address, protocol, (protocol == Protocol.ARTNET) ? ART_NET_PORT : SACN_PORT, universe);
-    }
-
-    public DMXIPController(InetAddress address, Protocol protocol, int port, int universe) {
-        if (universe < 0 || universe > 32767) {
-            throw new IllegalArgumentException("Universe must be between 0 and 32767");
-        }
+    /**
+     * Constructor for an IP controller with an IP address, protocol, and port
+     *
+     * @param address  IP address
+     * @param protocol {@link IPProtocol}
+     * @param port     port
+     */
+    public DMXIPController(InetAddress address, IPProtocol protocol, int port) {
         this.address = address;
         this.protocol = protocol;
         this.port = port;
-        this.universe = universe;
 
         connect();
     }
 
     @Override
-    public DMXType getType() {
-        return DMXType.IP;
+    public DMXControllerType getType() {
+        return DMXControllerType.IP;
+    }
+
+    @Override
+    public String getProtocolName() {
+        return protocol.name();
     }
 
     @Override
@@ -79,37 +92,32 @@ public class DMXIPController implements DMXController {
         try {
             this.socket = new DatagramSocket();
             this.connected = true;
-            notifyListeners(DMXChangeMessage.CONNECTED);
+            notifyListeners(DMXStatusChangeMessage.CONNECTED);
             startListening();
             return true;
         } catch (IOException e) {
             this.connected = false;
-            notifyListeners(DMXChangeMessage.DISCONNECTED);
+            notifyListeners(DMXStatusChangeMessage.DISCONNECTED);
             return false;
         }
     }
 
     @Override
-    public synchronized void render(DMXClient client) {
-        render(List.of(client));
-    }
-
-    @Override
-    public synchronized void render(List<DMXClient> clients) {
+    public synchronized void render(DMXUniverse universe) {
         if (!connected || socket == null) {
             LOGGER.error("Not connected to DMX network, can't render data to the devices");
             return;
         }
-        render((new DMXMessage(clients)).getData());
+        render(universe.getId(), universe.getData());
     }
 
     @Override
-    public synchronized void render(byte[] data) {
+    public synchronized void render(int universe, byte[] data) {
         if (!connected || socket == null) {
             LOGGER.error("Not connected to DMX network, can't render data to the devices");
             return;
         }
-        sendData(createDataPacket(data));
+        sendData(createDataPacket(universe, data));
     }
 
     @Override
@@ -120,7 +128,7 @@ public class DMXIPController implements DMXController {
             socket.close();
         }
         connected = false;
-        notifyListeners(DMXChangeMessage.DISCONNECTED);
+        notifyListeners(DMXStatusChangeMessage.DISCONNECTED);
     }
 
     @Override
@@ -139,7 +147,7 @@ public class DMXIPController implements DMXController {
             socket.send(datagramPacket);
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Sent packet to {}, length {}: {}",
-                        socket.getRemoteSocketAddress(), datagramPacket.getLength(),
+                        address, datagramPacket.getLength(),
                         HexTool.toHexString(datagramPacket.getData()));
             }
         } catch (IOException e) {
@@ -151,7 +159,7 @@ public class DMXIPController implements DMXController {
     private void handleDisconnection() {
         if (connected) {
             connected = false;
-            notifyListeners(DMXChangeMessage.DISCONNECTED);
+            notifyListeners(DMXStatusChangeMessage.DISCONNECTED);
 
             if (autoReconnect && reconnectAttempts < maxReconnectAttempts) {
                 LOGGER.info("Attempting to reconnect... (attempt {}/{})", reconnectAttempts + 1, maxReconnectAttempts);
@@ -194,7 +202,7 @@ public class DMXIPController implements DMXController {
             this.connected = true;
             this.listening = true;
 
-            notifyListeners(DMXChangeMessage.CONNECTED);
+            notifyListeners(DMXStatusChangeMessage.CONNECTED);
             startListening();
 
             return true;
@@ -203,7 +211,6 @@ public class DMXIPController implements DMXController {
             return false;
         }
     }
-
 
     private void startListening() {
         var listenerThread = new Thread(() -> {
@@ -243,30 +250,30 @@ public class DMXIPController implements DMXController {
         listenerThread.start();
     }
 
-    public byte[] createDataPacket(DMXMessage dmxMessage) {
-        return createDataPacket(dmxMessage.getData());
+    /**
+     * Create DMX data packet for the given universe
+     *
+     * @param universe {@link DMXUniverse}
+     * @return byte array containing header and footer for the selected protocol
+     */
+    public byte[] createDataPacket(DMXUniverse universe) {
+        return createDataPacket(universe.getId(), universe.getData());
     }
 
-    public byte[] createDataPacket(byte[] data) {
-        if (this.protocol == Protocol.ARTNET) {
+    /**
+     * Create DMX data packet for the given universe ID with the given DMX data
+     *
+     * @param universe {@link DMXUniverse}
+     * @param data     DMX data byte array
+     * @return byte array containing header and footer for the selected protocol
+     */
+    public byte[] createDataPacket(int universe, byte[] data) {
+        if (this.protocol == IPProtocol.ARTNET) {
             var builder = new ArtNetPacketBuilder();
-            return builder.createArtDMXPacket(data, universe);
+            return builder.createArtNetDMXPacket(data, universe);
         } else {
             var builder = new SACNPacketBuilder("");
             return builder.createSACNPacket(data, universe);
         }
     }
-
-    public void setAutoReconnect(boolean autoReconnect) {
-        this.autoReconnect = autoReconnect;
-    }
-
-    public void setReconnectDelay(long delayMs) {
-        this.reconnectDelayMs = delayMs;
-    }
-
-    public void setMaxReconnectAttempts(int maxAttempts) {
-        this.maxReconnectAttempts = maxAttempts;
-    }
-
 }

@@ -1,12 +1,20 @@
-package be.codewriter.dmx512.controller.ip;
+package be.codewriter.dmx512.controller.ip.builder;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+/**
+ * Builder to create IP packages containing DMX512 data using the SACP (Streaming ACP) protocol.
+ */
 public class SACNPacketBuilder {
 
+    /**
+     * Default SACN part
+     */
     public static final int SACN_PORT = 5568;
-    // sACN Constants
+    /**
+     * sACN Constants
+     */
     private static final byte[] ACN_PACKET_IDENTIFIER = {
             0x41, 0x53, 0x43, 0x2d, 0x45, 0x31, 0x2e, 0x31, 0x37, 0x00, 0x00, 0x00
     };
@@ -18,14 +26,14 @@ public class SACNPacketBuilder {
     private byte[] cid;
     private String sourceName;
 
+    /**
+     * Constructor by name
+     *
+     * @param sourceName source name
+     */
     public SACNPacketBuilder(String sourceName) {
         this.sourceName = sourceName;
         this.cid = generateCID();
-    }
-
-    public SACNPacketBuilder(String sourceName, UUID uuid) {
-        this.sourceName = sourceName;
-        this.cid = uuidToBytes(uuid);
     }
 
     /**
@@ -109,6 +117,10 @@ public class SACNPacketBuilder {
 
     /**
      * Convenience method with default priority (100)
+     *
+     * @param dmxData  data
+     * @param universe universe id
+     * @return byte array with sACN packet
      */
     public byte[] createSACNPacket(byte[] dmxData, int universe) {
         return createSACNPacket(dmxData, universe, 100);
@@ -123,6 +135,8 @@ public class SACNPacketBuilder {
 
     /**
      * Convert UUID to 16-byte array
+     *
+     * @param uuid uuid
      */
     private byte[] uuidToBytes(UUID uuid) {
         ByteBuffer buffer = ByteBuffer.allocate(16);
@@ -140,6 +154,8 @@ public class SACNPacketBuilder {
 
     /**
      * Set a custom CID
+     *
+     * @param uuid uuid
      */
     public void setCID(UUID uuid) {
         this.cid = uuidToBytes(uuid);
@@ -147,6 +163,8 @@ public class SACNPacketBuilder {
 
     /**
      * Set source name
+     *
+     * @param sourceName source name
      */
     public void setSourceName(String sourceName) {
         this.sourceName = sourceName;

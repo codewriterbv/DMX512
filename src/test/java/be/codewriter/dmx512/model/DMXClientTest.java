@@ -1,4 +1,4 @@
-package be.codewriter.dmx512.client;
+package be.codewriter.dmx512.model;
 
 import be.codewriter.dmx512.MotherObjects;
 import org.junit.jupiter.api.BeforeAll;
