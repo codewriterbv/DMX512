@@ -31,10 +31,22 @@ public class DMXSerialController implements DMXController {
      */
     public static final int MAX_DMX_CHANNELS = 512;
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXSerialController.class.getName());
-    private static final int DMX_BREAK_TIME_US = 88;    // Minimum break time in microseconds
-    private static final int DMX_MAB_TIME_US = 8;       // Mark After Break time in microseconds
-    private static final int DMX_PACKET_TIME_US = 44;   // Time per DMX slot in microseconds
-    private static final int DMX_FRAME_INTERVAL_MS = 100; // DMX_REFRESH_RATE_HZ
+    /**
+     * Minimum break time in microseconds
+     */
+    private static final int DMX_BREAK_TIME_US = 88;
+    /**
+     * Mark After Break time in microseconds
+     */
+    private static final int DMX_MAB_TIME_US = 8;
+    /**
+     * Time per DMX slot in microseconds
+     */
+    private static final int DMX_PACKET_TIME_US = 44;
+    /**
+     * Interval between DMX message refresh on the serial connection
+     */
+    private static final int DMX_FRAME_INTERVAL_MS = 50;
 
     private final String portName;
     private final SerialProtocol protocol;
@@ -47,7 +59,6 @@ public class DMXSerialController implements DMXController {
     // Continuous transmission support
     private Thread transmissionThread;
     private volatile boolean dataChanged = false;
-
 
     /**
      * Constructor for a serial (USB) controller on the given port name with the Enttec protocol.
@@ -261,8 +272,8 @@ public class DMXSerialController implements DMXController {
                 // Send DMX packet
                 sendDmxPacket(localDataBuffer);
 
-                if (hasNewData && LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Transmitted updated DMX data");
+                if (hasNewData && LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("Transmitted updated DMX data");
                 }
 
                 // Wait for next frame
@@ -402,6 +413,7 @@ public class DMXSerialController implements DMXController {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Enttec message: {}", HexFormat.of().formatHex(enttecPacket));
         }
+
         outputStream.write(enttecPacket);
         outputStream.flush();
     }
