@@ -1,22 +1,15 @@
+# Fixed RS485 to TFT Display for Raspberry Pi Pico
+# MicroPython implementation
 
-# Fixed RS485 to LCD/TFT Display for Raspberry Pi Pico
-# MicroPython implementation with improved LCD driver
-
+import framebuf
 import machine
 import utime
-from machine import Pin, UART, I2C, SPI
-import framebuf
+from machine import Pin, UART, SPI
 
 # Configuration
 RS485_UART_ID = 1  # UART1
 RS485_TX_PIN = 4   # GP4 - connect to TXD on module
 RS485_RX_PIN = 5   # GP5 - connect to RXD on module
-
-# LCD Configuration
-LCD_I2C_ID = 0     # I2C0
-LCD_SDA_PIN = 0    # GP0
-LCD_SCL_PIN = 1    # GP1
-LCD_ADDRESS = 0x27 # Common I2C address for LCD
 
 # TFT ILI9341 Configuration
 TFT_SPI_ID = 0
@@ -35,95 +28,6 @@ DMX_FIXTURES = [
     {"name": "RGB LED 1", "address": 23, "channels": 5, "type": "Color Changer"},
     {"name": "RGB LED 2", "address": 28, "channels": 5, "type": "Color Changer"},
 ]
-
-# LCD Driver Class (from lcd-test.py)
-class I2cLcd:
-    def __init__(self, i2c, addr, num_lines, num_columns):
-        self.i2c = i2c
-        self.addr = addr
-        self.num_lines = num_lines
-        self.num_columns = num_columns
-
-        # Test I2C connection first
-        try:
-            self.i2c.writeto(self.addr, bytes([0x00]))
-        except OSError as e:
-            print(f"LCD not responding: {e}")
-            return
-
-        # LCD initialization sequence
-        utime.sleep_ms(50)
-
-        # Initialize in 4-bit mode
-        self._write_nibble(0x03)
-        utime.sleep_ms(5)
-        self._write_nibble(0x03)
-        utime.sleep_ms(1)
-        self._write_nibble(0x03)
-        utime.sleep_ms(1)
-        self._write_nibble(0x02)
-        utime.sleep_ms(1)
-
-        # Now in 4-bit mode, send full commands
-        self._write_command(0x28)  # Function set: 4-bit, 2-line, 5x8 font
-        utime.sleep_ms(1)
-        self._write_command(0x08)  # Display off
-        utime.sleep_ms(1)
-        self._write_command(0x01)  # Clear display
-        utime.sleep_ms(2)
-        self._write_command(0x06)  # Entry mode: increment cursor
-        utime.sleep_ms(1)
-        self._write_command(0x0C)  # Display on, cursor off, blink off
-        utime.sleep_ms(1)
-
-    def _write_nibble(self, nibble):
-        try:
-            data = (nibble << 4) | 0x08  # Shift nibble left, set backlight bit
-            self.i2c.writeto(self.addr, bytes([data | 0x04]))  # Enable high
-            utime.sleep_us(1)
-            self.i2c.writeto(self.addr, bytes([data & ~0x04])) # Enable low
-            utime.sleep_us(50)
-        except OSError as e:
-            print(f"I2C write error: {e}")
-
-    def _write_command(self, cmd):
-        self._write_nibble((cmd >> 4) & 0x0F)
-        self._write_nibble(cmd & 0x0F)
-
-    def _write_data(self, data):
-        try:
-            # Upper nibble with RS=1
-            upper = ((data >> 4) & 0x0F) << 4 | 0x09
-            self.i2c.writeto(self.addr, bytes([upper | 0x04]))
-            utime.sleep_us(1)
-            self.i2c.writeto(self.addr, bytes([upper & ~0x04]))
-            utime.sleep_us(50)
-
-            # Lower nibble with RS=1
-            lower = (data & 0x0F) << 4 | 0x09
-            self.i2c.writeto(self.addr, bytes([lower | 0x04]))
-            utime.sleep_us(1)
-            self.i2c.writeto(self.addr, bytes([lower & ~0x04]))
-            utime.sleep_us(50)
-        except OSError as e:
-            print(f"I2C write error: {e}")
-
-    def clear(self):
-        self._write_command(0x01)
-        utime.sleep_ms(2)
-
-    def move_to(self, col, row):
-        if row == 0:
-            addr = 0x80 + col
-        elif row == 1:
-            addr = 0xC0 + col
-        else:
-            return
-        self._write_command(addr)
-
-    def putstr(self, string):
-        for char in string:
-            self._write_data(ord(char))
 
 # Improved TFT Driver Class with proper orientation and buffering
 class ILI9341:
@@ -483,18 +387,6 @@ class DMXMonitor:
         # Initialize status LED
         self.status_led = Pin(25, Pin.OUT)
 
-        # Initialize I2C for LCD
-        self.i2c = I2C(LCD_I2C_ID, sda=Pin(LCD_SDA_PIN), scl=Pin(LCD_SCL_PIN), freq=100000)
-
-        # Find LCD address
-        devices = self.i2c.scan()
-        lcd_addr = LCD_ADDRESS
-        if lcd_addr not in devices and devices:
-            lcd_addr = devices[0]
-
-        # Initialize LCD
-        self.lcd = I2cLcd(self.i2c, lcd_addr, 2, 16)
-
         # Initialize SPI for TFT
         self.spi = SPI(TFT_SPI_ID,
                       baudrate=40000000,  # Higher speed for better performance
@@ -514,13 +406,6 @@ class DMXMonitor:
 
         # Track last displayed state to avoid unnecessary redraws
         self.last_tft_state = {"receiving": None, "fixtures": []}
-
-        # Display initial messages
-        self.lcd.clear()
-        self.lcd.move_to(0, 0)
-        self.lcd.putstr("DMX Monitor")
-        self.lcd.move_to(0, 1)
-        self.lcd.putstr("Initializing...")
 
         self.draw_initial_tft()
         utime.sleep(2)
@@ -547,22 +432,6 @@ class DMXMonitor:
             self.tft.draw_text("Data:", 10, y_pos + 26, 0xF79E, 0x0000, 1)  # Orange
 
             y_pos += 42
-
-    def update_lcd_status(self, is_receiving, packet_count):
-        """Update LCD with current status"""
-        self.lcd.clear()
-        self.lcd.move_to(0, 0)
-
-        if is_receiving:
-            self.lcd.putstr("DMX: RECEIVING")
-            self.lcd.move_to(0, 1)
-            self.lcd.putstr(f"Packets: {packet_count}")
-        else:
-            self.lcd.putstr("DMX: WAITING")
-            self.lcd.move_to(0, 1)
-            timestamp = utime.localtime()
-            time_str = f"{timestamp[4]:02d}:{timestamp[5]:02d}:{timestamp[6]:02d}"
-            self.lcd.putstr(time_str)
 
     def update_tft_status_only(self, is_receiving):
         """Update only the status line to avoid full redraw"""
@@ -600,7 +469,6 @@ class DMXMonitor:
         """Main application loop"""
         print("DMX Monitor starting...")
 
-        last_lcd_update = 0
         last_tft_update = 0
         last_status_blink = 0
         status_led_state = False
@@ -612,11 +480,6 @@ class DMXMonitor:
                 # Read DMX data
                 self.dmx_reader.read_dmx_packet()
                 is_receiving = self.dmx_reader.is_receiving_data()
-
-                # Update LCD every 500ms
-                if utime.ticks_diff(current_time, last_lcd_update) > 500:
-                    self.update_lcd_status(is_receiving, self.dmx_reader.packet_count)
-                    last_lcd_update = current_time
 
                 # Update TFT every 2000ms or when status changes
                 if (utime.ticks_diff(current_time, last_tft_update) > 2000 or
