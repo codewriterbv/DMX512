@@ -147,7 +147,7 @@ public class DMXIPController implements DMXController {
             socket.send(datagramPacket);
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Sent packet to {}, length {}: {}",
-                        socket.getRemoteSocketAddress(), datagramPacket.getLength(),
+                        address, datagramPacket.getLength(),
                         HexTool.toHexString(datagramPacket.getData()));
             }
         } catch (IOException e) {

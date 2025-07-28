@@ -5,12 +5,17 @@ import be.codewriter.dmx512.controller.change.DMXStatusChangeMessage;
 import be.codewriter.dmx512.controller.serial.builder.EnttecDMXUSBProBuilder;
 import be.codewriter.dmx512.model.DMXUniverse;
 import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortDataListener;
+import com.fazecast.jSerialComm.SerialPortEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HexFormat;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * DMX Serial Controller.
@@ -29,12 +34,20 @@ public class DMXSerialController implements DMXController {
     private static final int DMX_BREAK_TIME_US = 88;    // Minimum break time in microseconds
     private static final int DMX_MAB_TIME_US = 8;       // Mark After Break time in microseconds
     private static final int DMX_PACKET_TIME_US = 44;   // Time per DMX slot in microseconds
+    private static final int DMX_FRAME_INTERVAL_MS = 100; // DMX_REFRESH_RATE_HZ
 
     private final String portName;
     private final SerialProtocol protocol;
+    private final AtomicBoolean shouldTransmit = new AtomicBoolean(false);
+    private final ReadWriteLock dataLock = new ReentrantReadWriteLock();
+    private final byte[] currentDmxData = new byte[MAX_DMX_CHANNELS];
     private SerialPort serialPort;
     private OutputStream outputStream;
     private boolean connected = false;
+    // Continuous transmission support
+    private Thread transmissionThread;
+    private volatile boolean dataChanged = false;
+
 
     /**
      * Constructor for a serial (USB) controller on the given port name with the Enttec protocol.
@@ -105,15 +118,19 @@ public class DMXSerialController implements DMXController {
 
         // Set timeouts
         serialPort.setComPortTimeouts(
-                SerialPort.TIMEOUT_READ_SEMI_BLOCKING,
-                100,
-                0
+                SerialPort.TIMEOUT_WRITE_BLOCKING,
+                0,
+                500
         );
 
         if (serialPort.openPort()) {
             outputStream = serialPort.getOutputStream();
             connected = true;
+
+            setupDisconnectListener();
+            startContinuousTransmission();
             notifyListeners(DMXStatusChangeMessage.CONNECTED);
+
             return true;
         } else {
             LOGGER.error("Failed to open port: {}", portName);
@@ -138,25 +155,23 @@ public class DMXSerialController implements DMXController {
             return;
         }
 
+        // Update the current DMX data that's being continuously transmitted
+        dataLock.writeLock().lock();
         try {
-            switch (protocol) {
-                case OPEN_DMX_USB:
-                    sendOpenDMXUSB(data);
-                    break;
-                case FTDI_CHIP_DIRECT:
-                    sendFTDIChipDirect(data);
-                    break;
-                case ENTTEC_OPEN_DMX:
-                    sendEnttecOpenDMX(data);
-                    break;
-                case GENERIC_SERIAL:
-                    sendGenericSerial(data);
-                    break;
-                default:
-                    throw new IllegalArgumentException("Unsupported protocol type: " + protocol);
+            // Copy new data to current buffer
+            int copyLength = Math.min(data.length, MAX_DMX_CHANNELS);
+            System.arraycopy(data, 0, currentDmxData, 0, copyLength);
+
+            // Zero out any remaining channels if the new data is shorter
+            if (copyLength < MAX_DMX_CHANNELS) {
+                for (int i = copyLength; i < MAX_DMX_CHANNELS; i++) {
+                    currentDmxData[i] = 0;
+                }
             }
-        } catch (IOException e) {
-            LOGGER.error("Could not send DMX message: {}", e.getMessage());
+
+            dataChanged = true;
+        } finally {
+            dataLock.writeLock().unlock();
         }
     }
 
@@ -188,6 +203,160 @@ public class DMXSerialController implements DMXController {
      */
     public boolean isConnected() {
         return connected && serialPort != null && serialPort.isOpen();
+    }
+
+    /**
+     * Start continuous DMX transmission in a background thread
+     */
+    private void startContinuousTransmission() {
+        if (transmissionThread != null && transmissionThread.isAlive()) {
+            stopContinuousTransmission();
+        }
+
+        shouldTransmit.set(true);
+        transmissionThread = new Thread(this::continuousTransmissionLoop, "DMX-Transmission-" + portName);
+        transmissionThread.setDaemon(true);
+        transmissionThread.start();
+
+        LOGGER.info("Started continuous DMX transmission thread for port {}", portName);
+    }
+
+    /**
+     * Stop continuous DMX transmission
+     */
+    private void stopContinuousTransmission() {
+        shouldTransmit.set(false);
+        if (transmissionThread != null) {
+            transmissionThread.interrupt();
+            try {
+                transmissionThread.join(1000); // Wait up to 1 second
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        LOGGER.info("Stopped continuous DMX transmission thread for port {}", portName);
+    }
+
+    /**
+     * Continuous transmission loop - runs in background thread
+     */
+    private void continuousTransmissionLoop() {
+        byte[] localDataBuffer = new byte[MAX_DMX_CHANNELS];
+
+        while (shouldTransmit.get() && connected) {
+            try {
+                // Copy current data if it has changed
+                boolean hasNewData = false;
+                dataLock.readLock().lock();
+                try {
+                    if (dataChanged) {
+                        System.arraycopy(currentDmxData, 0, localDataBuffer, 0, MAX_DMX_CHANNELS);
+                        dataChanged = false;
+                        hasNewData = true;
+                    }
+                } finally {
+                    dataLock.readLock().unlock();
+                }
+
+                // Send DMX packet
+                sendDmxPacket(localDataBuffer);
+
+                if (hasNewData && LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Transmitted updated DMX data");
+                }
+
+                // Wait for next frame
+                Thread.sleep(DMX_FRAME_INTERVAL_MS);
+
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            } catch (IOException e) {
+                LOGGER.error("Error during continuous transmission: {}", e.getMessage());
+                // Short delay before retrying
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }
+
+        LOGGER.debug("Continuous transmission loop ended for port {}", portName);
+    }
+
+    /**
+     * Send a single DMX packet based on the configured protocol
+     */
+    private void sendDmxPacket(byte[] dmxData) throws IOException {
+        if (!connected || outputStream == null) {
+            return;
+        }
+
+        try {
+            switch (protocol) {
+                case OPEN_DMX_USB:
+                    sendOpenDMXUSB(dmxData);
+                    break;
+                case FTDI_CHIP_DIRECT:
+                    sendFTDIChipDirect(dmxData);
+                    break;
+                case ENTTEC_OPEN_DMX:
+                    sendEnttecOpenDMX(dmxData);
+                    break;
+                case GENERIC_SERIAL:
+                    sendGenericSerial(dmxData);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unsupported protocol type: " + protocol);
+            }
+        } catch (IOException e) {
+            // Re-throw to be handled by the calling method
+            throw e;
+        }
+    }
+
+    private void setupDisconnectListener() {
+        if (serialPort != null) {
+            serialPort.addDataListener(new SerialPortDataListener() {
+                @Override
+                public int getListeningEvents() {
+                    return SerialPort.LISTENING_EVENT_PORT_DISCONNECTED;
+                }
+
+                @Override
+                public void serialEvent(SerialPortEvent event) {
+                    if (event.getEventType() == SerialPort.LISTENING_EVENT_PORT_DISCONNECTED) {
+                        LOGGER.warn("Serial port {} disconnected", portName);
+                        handleDisconnection("Port physically disconnected");
+                    }
+                }
+            });
+        }
+    }
+
+    private void handleDisconnection(String reason) {
+        connected = false;
+        LOGGER.error("DMX Serial Controller disconnected: {}", reason);
+
+        // Clean up resources
+        try {
+            if (outputStream != null) {
+                outputStream.close();
+                outputStream = null;
+            }
+        } catch (IOException e) {
+            LOGGER.error("Error closing output stream during disconnect: {}", e.getMessage());
+        }
+
+        // Close the port
+        if (serialPort != null && serialPort.isOpen()) {
+            serialPort.closePort();
+        }
+
+        // Notify listeners
+        notifyListeners(DMXStatusChangeMessage.DISCONNECTED);
     }
 
     /**

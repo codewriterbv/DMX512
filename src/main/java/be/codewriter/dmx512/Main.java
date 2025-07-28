@@ -20,6 +20,7 @@ import java.io.InputStream;
  */
 public class Main {
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class.getName());
+    private static final int UNIVERSE_ID = 0;
 
     private Main() {
         // Hide constructor
@@ -49,7 +50,6 @@ public class Main {
         }
 
         var controller = new DMXIPController(devices.getFirst().address());
-        int universe = 1;
 
         // Send raw data
         // The PicoSpot on DMX channel 1 expects 11 values
@@ -67,13 +67,13 @@ public class Main {
         "Program Speed"
         */
         // Set all to 0
-        controller.render(universe, new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        controller.render(UNIVERSE_ID, new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         sleep(2_000);
         // Set pan and tilt to 127
-        controller.render(universe, new byte[]{(byte) 127, (byte) 127, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        controller.render(UNIVERSE_ID, new byte[]{(byte) 127, (byte) 127, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         sleep(2_000);
         // Set pan/tilt back to 0, color wheel to 44, and dimmer full open
-        controller.render(universe, new byte[]{0, 0, 0, 0, 0, (byte) 44, 0, (byte) 255, 0, 0, 0});
+        controller.render(UNIVERSE_ID, new byte[]{0, 0, 0, 0, 0, (byte) 44, 0, (byte) 255, 0, 0, 0});
 
         sleep(5_000);
 
@@ -111,11 +111,10 @@ public class Main {
                     port.getName(), port.getDescription(), port.getPath());
         }
 
-        var controller = new DMXSerialController("tty.usbserial-B003X1DH", SerialProtocol.FTDI_CHIP_DIRECT);
+        // "tty.usbserial-B003X1DH" // tty.usbserial-BG01OL60 // B003X1DH
+        var controller = new DMXSerialController("tty.usbserial-BG01OL60", SerialProtocol.OPEN_DMX_USB);
         LOGGER.info("Controller initialized at {} with protocol {}, connected: {}",
                 controller.getAddress(), controller.getProtocolName(), controller.isConnected());
-
-        int universe = 1;
 
         // Send raw data
         // The PicoSpot on DMX channel 1 expects 11 values
@@ -133,13 +132,13 @@ public class Main {
         "Program Speed"
         */
         // Set all to 0
-        controller.render(universe, new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        controller.render(UNIVERSE_ID, new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         sleep(2_000);
         // Set pan and tilt to 127
-        controller.render(universe, new byte[]{(byte) 127, (byte) 127, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        controller.render(UNIVERSE_ID, new byte[]{(byte) 127, (byte) 127, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         sleep(2_000);
         // Set pan/tilt back to 0, color wheel to 44, and dimmer full open
-        controller.render(universe, new byte[]{0, 0, 0, 0, 0, (byte) 44, 0, (byte) 255, 0, 0, 0});
+        controller.render(UNIVERSE_ID, new byte[]{0, 0, 0, 0, 0, (byte) 44, 0, (byte) 255, 0, 0, 0});
 
         sleep(5_000);
 
@@ -189,7 +188,7 @@ public class Main {
         // Create a DMX client based on the fixture and DMX channel (23 in this example)
         // The first mode of the fixture will be used in the DMXClient constructor to define the number of channels
         DMXClient client = new DMXClient(23, fixture);
-        DMXUniverse universe = new DMXUniverse(1, client);
+        DMXUniverse universe = new DMXUniverse(UNIVERSE_ID, client);
 
         // Set to full red
         client.setValue("red", (byte) 255);
@@ -216,7 +215,7 @@ public class Main {
             // Create some fixtures
             var fixture = getFixturePartySpot();
             DMXClient client = new DMXClient(23, fixture);
-            DMXUniverse universe = new DMXUniverse(1, client);
+            DMXUniverse universe = new DMXUniverse(UNIVERSE_ID, client);
 
             // Set dimmer full
             client.setValue("dimmer", (byte) 255);
@@ -295,7 +294,7 @@ public class Main {
             }
 
             DMXClient client = new DMXClient(1, fixture, mode);
-            DMXUniverse universe = new DMXUniverse(1, client);
+            DMXUniverse universe = new DMXUniverse(UNIVERSE_ID, client);
 
             /*
             "Pan",
