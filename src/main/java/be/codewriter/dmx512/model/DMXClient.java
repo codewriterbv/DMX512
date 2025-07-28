@@ -75,6 +75,12 @@ public class DMXClient {
         this.values = new byte[selectedMode.channels().size()];
     }
 
+    public void reset() {
+        for (int i = 0; i < values.length; i++) {
+            values[i] = 0;
+        }
+    }
+
     /**
      * Get the fixture
      *

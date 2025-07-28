@@ -191,6 +191,7 @@ public class DMXSerialController implements DMXController {
      */
     public void close() {
         if (connected) {
+            stopContinuousTransmission();
             try {
                 if (outputStream != null) {
                     outputStream.close();

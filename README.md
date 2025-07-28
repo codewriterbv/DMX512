@@ -13,18 +13,20 @@ info: [Introducing a New Java DMX512 Library With Demo JavaFX User Interface](ht
 
 ## Computer to DMX Controllers
 
-### Tested with V0.0.1
+### Tested with V0.0.2
 
-* Network
-    * [JUNELIONY ArtNet 1024 2-Port Sulite DMX LAN512 2-Port ArtNet Converter](https://www.amazon.com.be/dp/B0CYPQ2Z4V) with ArtNet protocol
+* IP-to-DMX
+  * [JUNELIONY ArtNet 1024 2-Port Sulite DMX LAN512 2-Port ArtNet Converter](https://www.amazon.com.be/dp/B0CYPQ2Z4V) with ArtNet protocol
+* USB-to-DMX
+  * [DSD TECH SH-RS09B USB to DMX Cable for Freestyler QLC MagicQ and Pi Open Lighting](https://www.amazon.com.be/dp/B0F2MQZCWR)
 
 ### Still TODO
 
-* Network
-  * Other protocols
-* Serial
+* IP-to-DMX
+  * Other devices and protocols
+* USB-to-DMX
   * [Enttec Open DMX USB Interface](https://www.thomann.de/be/enttec_open_dmx_usb_interface.htm)
-  * [DSD TECH SH-RS09B USB to DMX Cable](https://www.amazon.com.be/gp/product/B07WV6P5W6/)
+  * Other devices and protocols
 
   
 ## Fixtures
@@ -33,7 +35,7 @@ Uses the [Open Fixture Library (OFL)](https://open-fixture-library.org/) to crea
 
 ## Sample use
 
-Below you can find some sample implementations based on this library. Check [Main.java](src/main/java/be/codewriter/dmx512/Main.java) for more of these examples. Check the [DMX512-Demo repository](https://github.com/codewriterbv/DMX512-Demo) for an example if you want to create a user interface with JavaFX.
+Below you can find some sample implementations based on this library. Check [Main.java](src/main/java/be/codewriter/dmx512/Main.java) and the [demo directory](src/main/java/be/codewriter/dmx512/demo) for more of these examples. 
 
 ### Send Raw Data
 
@@ -78,11 +80,15 @@ This is a minimal example:
 var controller = new DMXIPController(InetAddress.getByName("172.16.1.144"));
 
 // Load a fixture
-Fixture fixture = OpenFormatLibraryParser
-        .parseFixture(new File("/your/path/to/led-party-tcl-spot.json"));
+var fixtureFile = new File("/your/path/to/led-party-tcl-spot.json");
+Fixture fixture = OFLParser.parse(fixtureFile);
 
 // Create a DMX client based on the fixture, a mode, and DMX channel (23 in this example)
 DMXClient client = new DMXClient(fixture, fixture.modes().getFirst(), 23);
+
+// Create a universe (by ID) with the client(s)
+// Most controllers will use universe 0, except when they have multiple connections
+DMXUniverse universe = new DMXUniverse(0, client);
 
 // This fixture has only one mode with the following channels:
 // "channels": [
@@ -92,25 +98,33 @@ DMXClient client = new DMXClient(fixture, fixture.modes().getFirst(), 23);
 //   "Dimmer",
 //   "Effects"
 // ]
-              
-// Set to full red
-client.setValue("red", (byte) 255);
+
+// Set all channels to 0, except dimmer full open (255)
+client.reset();
 client.setValue("dimmer", (byte) 255);
+controller.render(universe);
+Thread.sleep(1_000);
 
-// Send the data to the DMX interface
-controller.render(client);
+// Setting RED
+client.setValue("red", (byte) 255);
+controller.render(universe);
+Thread.sleep(3_000);
 
-// Color change effect
-for (int i = 0; i <= 100; i++) {
-    float ratio = i / 100.0f;
-    client.setValue("red", (byte) (255 * (1 - ratio)));
-    client.setValue("blue", (byte) (255 * ratio));
-    controller.render(client);
-    sleep(50);
+// Fade RED down
+for (int i = 255; i >= 0; i--) {
+  client.setValue("red", (byte) i);
+  controller.render(universe);
+  Thread.sleep(25);
 }
 
 controller.close();
 ```
+
+### User Interface Demo
+
+You can find an example of a user interface with JavaFX to control DMX512 fixtures in the [DMX512-Demo repository](https://github.com/codewriterbv/DMX512-Demo).
+
+![](assets/demo-app-picospot-channels.png)
 
 ## Using this Library in your Project
 
