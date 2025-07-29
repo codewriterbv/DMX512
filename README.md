@@ -37,9 +37,9 @@ Uses the [Open Fixture Library (OFL)](https://open-fixture-library.org/) to crea
 This library is tested with various controllers (IP-to-DMX and USB-to-DMX) with the following fixtures
 
 * Two [Fun Generation PicoSpot 20 LED](https://www.thomann.de/be/fun_generation_picospot_20_led.htm)
-  * DMX address 1 and 13
+  * DMX address 1 and 12
 * Two [Eurolite LED PARty TCL Spot](https://www.thomann.de/be/eurolite_led_party_tcl_spot.htm)
-  * DMW address 23 and 28
+  * DMX address 23 and 28
 
 For most tests they are connected to one controller. For the universe-ID-test they are split into two chains.
 
