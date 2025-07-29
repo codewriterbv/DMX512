@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Defines a DMX universe by id and list of {@link DMXClient}
+ * Defines a DMX universe by id and list of {@link DMXClient}.
+ * In most cases, universe ID 0 is used for controllers with only one DMX (XLR) connection.
+ * For controllers with multiple DMX (XLR) connections, multiple universes must be created with their own ID.
  */
 public class DMXUniverse {
 
@@ -14,7 +16,14 @@ public class DMXUniverse {
     private final List<DMXClient> clients;
 
     /**
-     * Universe constructor, creates an empty clients list
+     * Universe constructor with universe ID 0 and an empty clients list
+     */
+    public DMXUniverse() {
+        this(0, new ArrayList<>());
+    }
+
+    /**
+     * Universe constructor with the given universe ID and an empty clients list
      *
      * @param id id
      */
@@ -23,7 +32,16 @@ public class DMXUniverse {
     }
 
     /**
-     * Universe constructor, creating a list with only the given client
+     * Universe constructor with universe ID 0 and a list only containing the given client
+     *
+     * @param client {@link DMXClient}
+     */
+    public DMXUniverse(DMXClient client) {
+        this(0, List.of(client));
+    }
+
+    /**
+     * Universe constructor with the given universe ID and a list only containing the given client
      *
      * @param id     id
      * @param client {@link DMXClient}
@@ -33,7 +51,16 @@ public class DMXUniverse {
     }
 
     /**
-     * Universe constructor
+     * Universe constructor with universe ID 0 and the given list of clients
+     *
+     * @param clients list if {@link DMXClient}
+     */
+    public DMXUniverse(List<DMXClient> clients) {
+        this(0, clients);
+    }
+
+    /**
+     * Universe constructor given universe ID and list of clients
      *
      * @param id      id
      * @param clients list if {@link DMXClient}
