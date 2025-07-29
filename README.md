@@ -28,12 +28,22 @@ info: [Introducing a New Java DMX512 Library With Demo JavaFX User Interface](ht
   * [Enttec Open DMX USB Interface](https://www.thomann.de/be/enttec_open_dmx_usb_interface.htm)
   * Other devices and protocols
 
-  
 ## Fixtures
 
 Uses the [Open Fixture Library (OFL)](https://open-fixture-library.org/) to create DMX fixtures as Java objects. Fixtures can be parsed from the [OFL JSON format](https://github.com/OpenLightingProject/open-fixture-library/blob/master/docs/fixture-format.md).
 
-## Sample use
+### Test Setup
+
+This library is tested with various controllers (IP-to-DMX and USB-to-DMX) with the following fixtures
+
+* Two [Fun Generation PicoSpot 20 LED](https://www.thomann.de/be/fun_generation_picospot_20_led.htm)
+  * DMX address 1 and 13
+* Two [Eurolite LED PARty TCL Spot](https://www.thomann.de/be/eurolite_led_party_tcl_spot.htm)
+  * DMW address 23 and 28
+
+For most tests they are connected to one controller. For the universe-ID-test they are split into two chains.
+
+## Sample Use
 
 Below you can find some sample implementations based on this library. Check [Main.java](src/main/java/be/codewriter/dmx512/Main.java) and the [demo directory](src/main/java/be/codewriter/dmx512/demo) for more of these examples. 
 
