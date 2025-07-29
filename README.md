@@ -6,10 +6,27 @@ Java library for the DMX512 protocol and Open Fixture Library (OFL).
 
 This library can be used to connect with USB-to-DMX and IP-to-DMX controllers. It can load fixture definitions from the [Open Fixture Library](https://open-fixture-library.org/) to easily create a Java (user interface) application that can interact with many types of DMX devices.
 
-Check this blog post for more
-info: [Introducing a New Java DMX512 Library With Demo JavaFX User Interface](https://webtechie.be/post/2025-07-17-introducing-java-dmx512-library-with-demo-javafx-ui/). A full explanation is available on YouTube:
+## Learn More
 
-[![DMX512 Java library intro video on YouTube](https://img.youtube.com/vi/ztrO3Crexmg/0.jpg)](https://www.youtube.com/watch?v=ztrO3Crexmg)
+### Blog Posts
+
+* 2025-07-17: [Introducing a New Java DMX512 Library With Demo JavaFX User Interface](https://webtechie.be/post/2025-07-17-introducing-java-dmx512-library-with-demo-javafx-ui/).
+* 2025-07-29: [Release V0.0.2 of Java DMX512 Library With Universes and USB-to-DMX support](https://webtechie.be/post/2025-07-29-java-dmx512-library-v0.0.2-universes-and-usb/)
+ 
+### Videos
+
+* 2025-07-17: Introduction video with a full explanation
+
+[![](https://img.youtube.com/vi/ztrO3Crexmg/mqdefault.jpg)](https://www.youtube.com/watch?v=ztrO3Crexmg)
+
+* 2025-07-29: How to use universes with an IP-to-DMX controller
+
+[![](https://img.youtube.com/vi/slC4niKWUq0/mqdefault.jpg)](https://www.youtube.com/watch?v=slC4niKWUq0)
+
+* 2025-07-29: How to use a USB-to-DMX controller
+
+[![](https://img.youtube.com/vi/q7T66fzsym0/mqdefault.jpg)](https://www.youtube.com/watch?v=q7T66fzsym0)
+
 
 ## Computer to DMX Controllers
 
