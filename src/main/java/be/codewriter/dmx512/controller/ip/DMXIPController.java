@@ -2,8 +2,8 @@ package be.codewriter.dmx512.controller.ip;
 
 import be.codewriter.dmx512.controller.DMXController;
 import be.codewriter.dmx512.controller.change.DMXStatusChangeMessage;
-import be.codewriter.dmx512.controller.ip.builder.ArtNetPacketBuilder;
-import be.codewriter.dmx512.controller.ip.builder.SACNPacketBuilder;
+import be.codewriter.dmx512.controller.ip.packet.ArtNetPacket;
+import be.codewriter.dmx512.controller.ip.packet.SACNPacket;
 import be.codewriter.dmx512.model.DMXUniverse;
 import be.codewriter.dmx512.tool.HexTool;
 import org.slf4j.Logger;
@@ -16,8 +16,8 @@ import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
 
-import static be.codewriter.dmx512.controller.ip.builder.ArtNetPacketBuilder.ART_NET_PORT;
-import static be.codewriter.dmx512.controller.ip.builder.SACNPacketBuilder.SACN_PORT;
+import static be.codewriter.dmx512.controller.ip.packet.ArtNetPacket.ART_NET_PORT;
+import static be.codewriter.dmx512.controller.ip.packet.SACNPacket.SACN_PORT;
 
 /**
  * DMX IP Controller.
@@ -25,12 +25,11 @@ import static be.codewriter.dmx512.controller.ip.builder.SACNPacketBuilder.SACN_
  */
 public class DMXIPController implements DMXController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DMXIPController.class.getName());
-
+    private static final long RECONNECT_DELAY_MS = 5000; // 5 seconds
+    private static final int MAX_RECONNECT_ATTEMPTS = 10;
     private final InetAddress address;
     private final IPProtocol protocol;
     private final int port;
-    private final long reconnectDelayMs = 5000; // 5 seconds
-    private final int maxReconnectAttempts = 10;
     private boolean listening = true;
     private DatagramSocket socket;
     private boolean connected = false;
@@ -161,10 +160,10 @@ public class DMXIPController implements DMXController {
             connected = false;
             notifyListeners(DMXStatusChangeMessage.DISCONNECTED);
 
-            if (autoReconnect && reconnectAttempts < maxReconnectAttempts) {
-                LOGGER.info("Attempting to reconnect... (attempt {}/{})", reconnectAttempts + 1, maxReconnectAttempts);
+            if (autoReconnect && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                LOGGER.info("Attempting to reconnect... (attempt {}/{})", reconnectAttempts + 1, MAX_RECONNECT_ATTEMPTS);
                 scheduleReconnect();
-            } else if (reconnectAttempts >= maxReconnectAttempts) {
+            } else if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
                 LOGGER.error("Max reconnection attempts reached. Giving up.");
             }
         }
@@ -173,13 +172,13 @@ public class DMXIPController implements DMXController {
     private void scheduleReconnect() {
         Thread reconnectThread = new Thread(() -> {
             try {
-                Thread.sleep(reconnectDelayMs);
+                Thread.sleep(RECONNECT_DELAY_MS);
                 if (attemptReconnect()) {
                     reconnectAttempts = 0;
                     LOGGER.info("Successfully reconnected to DMX network");
                 } else {
                     reconnectAttempts++;
-                    if (reconnectAttempts < maxReconnectAttempts) {
+                    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
                         scheduleReconnect();
                     }
                 }
@@ -227,10 +226,18 @@ public class DMXIPController implements DMXController {
                             receivedPacket.getPort(),
                             receivedPacket.getLength());
 
-                    // If you need to log the actual data:
+                    // Get the data
                     byte[] data = Arrays.copyOf(receivedPacket.getData(), receivedPacket.getLength());
+
+                    // If you need to log the actual data:
                     if (LOGGER.isTraceEnabled()) {
                         LOGGER.trace("Received data: {}", Arrays.toString(data));
+                    }
+
+                    if (protocol == IPProtocol.ARTNET) {
+                        notifyListeners(DMXStatusChangeMessage.DATA_RECEIVED, ArtNetPacket.extractDmxData(data));
+                    } else if (protocol == IPProtocol.SACN) {
+                        notifyListeners(DMXStatusChangeMessage.DATA_RECEIVED, SACNPacket.extractDmxData(data));
                     }
                 } catch (SocketTimeoutException e) {
                     LOGGER.warn("Socket timeout: {}", e.getMessage());
@@ -245,6 +252,7 @@ public class DMXIPController implements DMXController {
                 }
             }
         });
+
         listenerThread.setName("DMX-UDP-Listener");
         listenerThread.setDaemon(true);
         listenerThread.start();
@@ -269,11 +277,9 @@ public class DMXIPController implements DMXController {
      */
     public byte[] createDataPacket(int universe, byte[] data) {
         if (this.protocol == IPProtocol.ARTNET) {
-            var builder = new ArtNetPacketBuilder();
-            return builder.createArtNetDMXPacket(data, universe);
+            return ArtNetPacket.createArtNetDMXPacket(data, universe);
         } else {
-            var builder = new SACNPacketBuilder("");
-            return builder.createSACNPacket(data, universe);
+            return SACNPacket.createSACNPacket(data, universe);
         }
     }
 }

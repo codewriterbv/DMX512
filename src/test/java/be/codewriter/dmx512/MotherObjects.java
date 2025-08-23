@@ -27,6 +27,20 @@ public class MotherObjects {
         return client;
     }
 
+    public static DMXClient sixChannelClient(byte red, byte green, byte blue, byte dimmer, byte effects, byte speed, int startChannel) {
+        var fixture = sixChannelFixture();
+        var client = new DMXClient(startChannel, fixture);
+
+        client.setValue("Red", red);
+        client.setValue("Green", green);
+        client.setValue("Blue", blue);
+        client.setValue("Dimmer", dimmer);
+        client.setValue("Effects", effects);
+        client.setValue("Speed", speed);
+
+        return client;
+    }
+
     public static DMXClient nineChannelClient(byte red, byte green, byte blue, byte dimmer, byte effects, byte pan, byte tilt, byte speed, byte gobo) {
         return nineChannelClient(red, green, blue, dimmer, effects, pan, tilt, speed, gobo, 1);
     }
@@ -68,6 +82,31 @@ public class MotherObjects {
                         "5-Channel",
                         "5ch",
                         List.of("Red", "Green", "Blue", "Dimmer", "Effects")
+                )) // modes
+        );
+    }
+
+    public static Fixture sixChannelFixture() {
+        LinkedHashMap<String, Channel> channels = new LinkedHashMap<>();
+        channels.put("Red", new Channel(null, null, null, null));
+        channels.put("Green", new Channel(null, null, null, null));
+        channels.put("Blue", new Channel(null, null, null, null));
+        channels.put("Dimmer", new Channel(null, null, null, null));
+        channels.put("Effects", new Channel(null, null, null, null));
+        channels.put("Speed", new Channel(null, null, null, null));
+
+        return new Fixture(
+                "Name",
+                List.of("Cat 1", "Cate 2"),
+                null, // meta
+                null, // links
+                null, // physical
+                null, // wheels
+                channels,
+                List.of(new Mode(
+                        "6-Channel",
+                        "6ch",
+                        List.of("Red", "Green", "Blue", "Dimmer", "Effects", "Speed")
                 )) // modes
         );
     }

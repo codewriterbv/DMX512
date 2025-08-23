@@ -1,4 +1,4 @@
-package be.codewriter.dmx512.controller.ip.builder;
+package be.codewriter.dmx512.controller.ip.packet;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 /**
  * Builder to create IP packages containing DMX512 data using the ArtNet protocol.
  */
-public class ArtNetPacketBuilder {
+public class ArtNetPacket {
     /**
      * Art-Net OpCode for a poll message
      */
@@ -20,19 +20,15 @@ public class ArtNetPacketBuilder {
      * Default port for the ArtNet protocol
      */
     public static final int ART_NET_PORT = 6454;
-    private static final Logger LOGGER = Logger.getLogger(ArtNetPacketBuilder.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ArtNetPacket.class.getName());
     // Art-Net Constants
     private static final byte[] ART_NET_HEADER = {'A', 'r', 't', '-', 'N', 'e', 't', 0};
     private static final int PROTOCOL_VERSION = 14;
-    private final boolean enableSequencing = true;
-    private final int physicalPort = 0;
-    private byte sequenceNumber = 0;
+    private static final boolean ENABLE_SEQUENCING = true;
+    private static final int PHYSICAL_PORT = 0;
 
-    /**
-     * Constructor
-     */
-    public ArtNetPacketBuilder() {
-        // Default constructor
+    private ArtNetPacket() {
+        // Hide constructor
     }
 
     /**
@@ -44,7 +40,7 @@ public class ArtNetPacketBuilder {
      * @param net      Net number (0-127)
      * @return Complete Art-Net packet ready for transmission
      */
-    public byte[] createArtNetDMXPacket(byte[] dmxData, int universe, int subnet, int net) {
+    public static byte[] createArtNetDMXPacket(byte[] dmxData, int universe, int subnet, int net) {
         if (dmxData == null || dmxData.length == 0 || dmxData.length > 512) {
             throw new IllegalArgumentException("DMX data must be 1-512 bytes");
         }
@@ -79,10 +75,11 @@ public class ArtNetPacketBuilder {
         buffer.order(ByteOrder.LITTLE_ENDIAN);
 
         // Sequence number
-        buffer.put(enableSequencing ? sequenceNumber++ : (byte) 0);
+        var sequenceNumber = 0; // TODO, should this increment?
+        buffer.put(ENABLE_SEQUENCING ? (byte) sequenceNumber : (byte) 0);
 
         // Physical port
-        buffer.put((byte) physicalPort);
+        buffer.put((byte) PHYSICAL_PORT);
 
         // Universe address (SubNet + Universe in low byte, Net in high byte)
         int universeAddress = (net << 8) | (subnet << 4) | universe;
@@ -118,7 +115,7 @@ public class ArtNetPacketBuilder {
      * @param universe universe id
      * @return byte array containing the full ArtNet package
      */
-    public byte[] createArtNetDMXPacket(byte[] dmxData, int universe) {
+    public static byte[] createArtNetDMXPacket(byte[] dmxData, int universe) {
         return createArtNetDMXPacket(dmxData, universe, 0, 0);
     }
 
@@ -129,7 +126,7 @@ public class ArtNetPacketBuilder {
      * @param priority Priority of diagnostics messages (0-3)
      * @return Art-Net Poll packet
      */
-    public byte[] createArtPollPacket(byte talkToMe, byte priority) {
+    public static byte[] createArtPollPacket(byte talkToMe, byte priority) {
         ByteBuffer buffer = ByteBuffer.allocate(14);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
 
@@ -158,7 +155,44 @@ public class ArtNetPacketBuilder {
      *
      * @return byte array
      */
-    public byte[] createArtPollPacket() {
+    public static byte[] createArtPollPacket() {
         return createArtPollPacket((byte) 0x00, (byte) 0x00);
+    }
+
+    public static byte[] extractDmxData(byte[] packet) {
+        if (packet == null || packet.length < 18) {
+            return null;
+        }
+
+        // Get DMX data length from bytes 16-17 (big-endian)
+        int dmxLength = getDmxDataLength(packet);
+
+        // Validate packet size
+        if (packet.length < 18 + dmxLength) {
+            return null;
+        }
+
+        // Extract only the original DMX data (without padding)
+        // Need to determine actual data length vs padded length
+        int actualDataLength = dmxLength;
+        if (dmxLength > 0 && packet[17 + dmxLength] == 0) {
+            // Check if last byte is padding (zero)
+            actualDataLength = dmxLength - 1;
+        }
+
+        byte[] dmxData = new byte[actualDataLength];
+        System.arraycopy(packet, 18, dmxData, 0, actualDataLength);
+
+        return dmxData;
+
+    }
+
+    public static short getDmxDataLength(byte[] packet) {
+        if (packet == null || packet.length < 18) {
+            return 0;
+        }
+
+        // DMX data length is stored at bytes 16-17 in big-endian format
+        return (short) (((packet[16] & 0xFF) << 8) | (packet[17] & 0xFF));
     }
 }

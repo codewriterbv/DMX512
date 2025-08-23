@@ -1,12 +1,13 @@
-package be.codewriter.dmx512.controller.ip.builder;
+package be.codewriter.dmx512.controller.ip.packet;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.UUID;
 
 /**
  * Builder to create IP packages containing DMX512 data using the SACP (Streaming ACP) protocol.
  */
-public class SACNPacketBuilder {
+public class SACNPacket {
 
     /**
      * Default SACN part
@@ -22,18 +23,19 @@ public class SACNPacketBuilder {
     private static final int FRAMING_VECTOR = 0x00000002;
     private static final byte DMP_VECTOR = 0x02;
     private static final byte ADDRESS_TYPE_DATA_TYPE = (byte) 0xa1;
-    private byte sequenceNumber = 0;
-    private byte[] cid;
-    private String sourceName;
+    private static final String sourceName = "";
+    private static byte sequenceNumber = 0;
+    private static byte[] cid;
 
-    /**
-     * Constructor by name
-     *
-     * @param sourceName source name
-     */
-    public SACNPacketBuilder(String sourceName) {
-        this.sourceName = sourceName;
-        this.cid = generateCID();
+    private SACNPacket() {
+        // Hide constructor
+    }
+
+    public static byte[] extractDmxData(byte[] packet) {
+        ByteBuffer buffer = ByteBuffer.wrap(packet);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+
+        return buffer.array();
     }
 
     /**
@@ -44,7 +46,7 @@ public class SACNPacketBuilder {
      * @param priority Priority level (0-200, default 100)
      * @return Complete sACN packet ready for transmission
      */
-    public byte[] createSACNPacket(byte[] dmxData, int universe, int priority) {
+    public static byte[] createSACNPacket(byte[] dmxData, int universe, int priority) {
         if (dmxData == null || dmxData.length == 0 || dmxData.length > 512) {
             throw new IllegalArgumentException("DMX data must be 1-512 bytes");
         }
@@ -65,7 +67,7 @@ public class SACNPacketBuilder {
         // Framing layer: 77 bytes header + DMP layer
         int framingLayerSize = 77 + dmpLayerSize;
 
-        // Root layer: 22 bytes header + Framing layer  
+        // Root layer: 22 bytes header + Framing layer
         int rootLayerSize = 22 + framingLayerSize;
 
         // Complete packet: 16 bytes preamble + Root layer
@@ -122,15 +124,8 @@ public class SACNPacketBuilder {
      * @param universe universe id
      * @return byte array with sACN packet
      */
-    public byte[] createSACNPacket(byte[] dmxData, int universe) {
+    public static byte[] createSACNPacket(byte[] dmxData, int universe) {
         return createSACNPacket(dmxData, universe, 100);
-    }
-
-    /**
-     * Generate a random CID (Component Identifier)
-     */
-    private byte[] generateCID() {
-        return uuidToBytes(UUID.randomUUID());
     }
 
     /**
@@ -138,56 +133,10 @@ public class SACNPacketBuilder {
      *
      * @param uuid uuid
      */
-    private byte[] uuidToBytes(UUID uuid) {
+    private static byte[] uuidToBytes(UUID uuid) {
         ByteBuffer buffer = ByteBuffer.allocate(16);
         buffer.putLong(uuid.getMostSignificantBits());
         buffer.putLong(uuid.getLeastSignificantBits());
         return buffer.array();
     }
-
-    /**
-     * Reset sequence number (useful for new connections)
-     */
-    public void resetSequence() {
-        sequenceNumber = 0;
-    }
-
-    /**
-     * Set a custom CID
-     *
-     * @param uuid uuid
-     */
-    public void setCID(UUID uuid) {
-        this.cid = uuidToBytes(uuid);
-    }
-
-    /**
-     * Set source name
-     *
-     * @param sourceName source name
-     */
-    public void setSourceName(String sourceName) {
-        this.sourceName = sourceName;
-    }
 }
-
-// Usage example:
-/*
-public class SACNExample {
-    public static void main(String[] args) {
-        SACNPacketBuilder builder = new SACNPacketBuilder("My Lighting Controller");
-        
-        // Create DMX data (example: all channels at 50%)
-        byte[] dmxData = new byte[512];
-        for (int i = 0; i < dmxData.length; i++) {
-            dmxData[i] = (byte) 127; // 50% brightness
-        }
-        
-        // Create packet for universe 1
-        byte[] packet = builder.createSACNPacket(dmxData, 1);
-        
-        // Send packet via UDP multicast to 239.255.0.1:5568
-        // (network code not shown)
-    }
-}
-*/

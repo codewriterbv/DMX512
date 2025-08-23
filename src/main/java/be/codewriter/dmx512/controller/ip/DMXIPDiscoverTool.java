@@ -1,7 +1,7 @@
 package be.codewriter.dmx512.controller.ip;
 
-import be.codewriter.dmx512.controller.ip.builder.ArtNetPacketBuilder;
-import be.codewriter.dmx512.controller.ip.builder.SACNPacketBuilder;
+import be.codewriter.dmx512.controller.ip.packet.ArtNetPacket;
+import be.codewriter.dmx512.controller.ip.packet.SACNPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,8 +9,8 @@ import java.io.IOException;
 import java.net.*;
 import java.util.*;
 
-import static be.codewriter.dmx512.controller.ip.builder.ArtNetPacketBuilder.ART_NET_PORT;
-import static be.codewriter.dmx512.controller.ip.builder.SACNPacketBuilder.SACN_PORT;
+import static be.codewriter.dmx512.controller.ip.packet.ArtNetPacket.ART_NET_PORT;
+import static be.codewriter.dmx512.controller.ip.packet.SACNPacket.SACN_PORT;
 
 /**
  * Tool to detect IP-to-DMX controllers
@@ -35,12 +35,12 @@ public class DMXIPDiscoverTool {
     /**
      * Discover the connected IP-to-DMX devices using the given protocol.
      *
-     * @param IPProtocol {@link IPProtocol}
+     * @param ipProtocol {@link IPProtocol}
      * @param universe   universe ID
      * @return list of {@link DMXIPDevice}
      */
-    public static List<DMXIPDevice> discoverDevices(IPProtocol IPProtocol, int universe) {
-        List<DMXIPDevice> DMXIPDevices = new ArrayList<>();
+    public static List<DMXIPDevice> discoverDevices(IPProtocol ipProtocol, int universe) {
+        List<DMXIPDevice> discoveredDevices = new ArrayList<>();
         Set<InetAddress> localAddresses = new HashSet<>();
 
         try {
@@ -50,8 +50,8 @@ public class DMXIPDiscoverTool {
             }
 
             // Send Art-Net poll packet
-            byte[] pollPacket = createDetectPacket(IPProtocol, universe);
-            int port = IPProtocol == be.codewriter.dmx512.controller.ip.IPProtocol.ARTNET ? ART_NET_PORT : SACN_PORT;
+            byte[] pollPacket = createDetectPacket(ipProtocol, universe);
+            int port = ipProtocol == IPProtocol.ARTNET ? ART_NET_PORT : SACN_PORT;
             DatagramPacket packet = new DatagramPacket(
                     pollPacket,
                     pollPacket.length,
@@ -83,28 +83,25 @@ public class DMXIPDiscoverTool {
 
                         DMXIPDevice dmxIpDevice = parseArtNetPollReply(receivePacket);
                         if (dmxIpDevice != null) {
-                            DMXIPDevices.add(dmxIpDevice);
+                            discoveredDevices.add(dmxIpDevice);
                         }
                     } catch (SocketTimeoutException e) {
                         // Continue until overall timeout is reached
                     }
                 }
-
             }
         } catch (IOException e) {
             LOGGER.error("Discovery failed: {}", e.getMessage());
         }
 
-        return DMXIPDevices;
+        return discoveredDevices;
     }
 
-    private static byte[] createDetectPacket(IPProtocol IPProtocol, int universe) {
-        if (IPProtocol == be.codewriter.dmx512.controller.ip.IPProtocol.ARTNET) {
-            var builder = new ArtNetPacketBuilder();
-            return builder.createArtPollPacket();
+    private static byte[] createDetectPacket(IPProtocol ipProtocol, int universe) {
+        if (ipProtocol == IPProtocol.ARTNET) {
+            return ArtNetPacket.createArtPollPacket();
         } else {
-            var builder = new SACNPacketBuilder("");
-            return builder.createSACNPacket(new byte[]{}, universe);
+            return SACNPacket.createSACNPacket(new byte[]{}, universe);
         }
     }
 

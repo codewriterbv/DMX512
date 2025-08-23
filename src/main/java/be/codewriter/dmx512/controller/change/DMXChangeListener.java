@@ -11,4 +11,12 @@ public interface DMXChangeListener {
      * @param value                  value
      */
     void notify(DMXStatusChangeMessage dmxStatusChangeMessage, String value);
+
+    /**
+     * Notify the change
+     *
+     * @param dmxStatusChangeMessage {@link DMXStatusChangeMessage}
+     * @param data                   byte array containing DMX data
+     */
+    void notify(DMXStatusChangeMessage dmxStatusChangeMessage, byte[] data);
 }

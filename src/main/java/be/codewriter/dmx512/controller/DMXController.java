@@ -110,6 +110,16 @@ public interface DMXController {
     }
 
     /**
+     * Notify the listeners of a change with the given value
+     *
+     * @param dmxStatusChangeMessage {@link DMXStatusChangeMessage}
+     * @param data                   byte array containing the DMX data
+     */
+    default void notifyListeners(DMXStatusChangeMessage dmxStatusChangeMessage, byte[] data) {
+        listeners.forEach(l -> l.notify(dmxStatusChangeMessage, data));
+    }
+
+    /**
      * List of available controller types
      */
     enum DMXControllerType {
