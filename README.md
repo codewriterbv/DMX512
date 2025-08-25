@@ -8,6 +8,10 @@ This library can be used to connect with USB-to-DMX and IP-to-DMX controllers. I
 
 ## Learn More
 
+### API Documentation
+
+The documentation based on the JavaDoc in the sources, can be [found on APIdia.net](https://apidia.net/mvn/be.codewriter/dmx512).
+
 ### Blog Posts
 
 * 2025-07-17: [Introducing a New Java DMX512 Library With Demo JavaFX User Interface](https://webtechie.be/post/2025-07-17-introducing-java-dmx512-library-with-demo-javafx-ui/).
