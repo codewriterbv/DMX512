@@ -37,6 +37,15 @@ public class DMXIPController implements DMXController {
     private int reconnectAttempts = 0;
 
     /**
+     * Constructor for an IP controller from an IP device, using the ArtNet protocol
+     *
+     * @param device {@link DMXIPDevice}
+     */
+    public DMXIPController(DMXIPDevice device) {
+        this(device.address(), IPProtocol.ARTNET, ART_NET_PORT);
+    }
+
+    /**
      * Constructor for an IP controller with only the IP address, using the ArtNet protocol
      *
      * @param address IP address

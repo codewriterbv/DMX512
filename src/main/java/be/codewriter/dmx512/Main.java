@@ -31,7 +31,7 @@ public class Main {
         runSerialDemo();
 
         // Run demo with two universes
-        (new IPTwoUniversesDemo()).run(new DMXIPController(DMXIPDiscoverTool.discoverDevices().getFirst().address()));
+        (new IPTwoUniversesDemo()).run(new DMXIPController(DMXIPDiscoverTool.discoverDevices().getFirst()));
     }
 
     private static void runIpDemo() {
@@ -47,7 +47,7 @@ public class Main {
                     device.getName(), device.getAddress());
         }
 
-        var controller = new DMXIPController(devices.getFirst().address());
+        var controller = new DMXIPController(devices.getFirst());
 
         // Run the demos
         runAllDemos(controller);
